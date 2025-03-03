@@ -5,8 +5,10 @@ BOX_SIZE = 10
 PADDING = 10
 WINDOW_HEIGHT = 600
 WINDOW_WIDTH = 1200
+FPS = 60
 
 BG_COLOR = (10, 14, 18)
+BOARD_BG_COLOR = (58, 36, 59)
 GRID_COLOR = (199, 207, 214)
 
 class Piece:
@@ -55,8 +57,9 @@ class Board:
         
         self.score = 0
         self.grid = []
-        
         for i in range(20): self.grid.append([0] * 10)
+
+        self.currentPiece = None
 
     def spawn(self):
         self.currentPiece = Piece(self.xSpawn, self.ySpawn)
@@ -64,7 +67,10 @@ class Board:
     def rotate(self):
         pass
 
-    def move(self, dir):    #directions = ['u', 'd', 'l', 'r']
+    def move(self, dir):    #directions = -1 or 1   #no moving down only direct placing
+        pass
+
+    def forceDown(self):
         pass
 
     def place(self):    #to place the block
@@ -73,7 +79,49 @@ class Board:
     def collision(self):
         pass
 
+    def clearLine():    #checks which line to clear and reduced position of all blocks above it by 1
+        pass
+
+    def fillBoard(self, window):    #fill only the board with the boardbg color
+        pass
+
+    def drawGrid(self, window):     #draw the horizontal and vertical lines
+        pass
+
+    def drawPieces(self, window):   #draw the pieces
+        pass
+
+
 pygame.init()
 window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+window.fill(BG_COLOR)
+clock = pygame.time.Clock()
+board = Board(0, 0)
 
-while True: pass
+
+running = True
+
+while running:
+
+    if board.currentPiece is None:
+        board.spawn()
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key in [pygame.K_UP, pygame.K_DOWN]:
+                board.rotate()
+            if event.key == pygame.K_SPACE:
+                board.forceDown()
+            if event.key == pygame.K_LEFT:
+                board.move(-1)
+            if event.key == pygame.K_RIGHT:
+                board.move(1)
+            
+    board.fillBoard(window)
+    board.drawGrid(window)
+    board.drawPieces(window)
+
+    pygame.display.update()
+    clock.tick(FPS)
