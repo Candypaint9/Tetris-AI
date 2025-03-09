@@ -10,6 +10,8 @@ WINDOW_WIDTH = BOX_SIZE * COLS
 GRID_THICKNESS = 1
 
 FPS = 60
+#test commit extra text
+
 
 BG_COLOR = (10, 14, 18)
 BOARD_BG_COLOR = (28, 7, 61)
