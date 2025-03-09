@@ -83,7 +83,7 @@ class Board:
             return True
         return False
 
-    def update(self):       # add in this function to push piece down after certain timer and if cant go down to call place function
+    def update(self):   # add in this function to push piece down after certain timer and if cant go down to call place function
         if self.currentPiece is None:
             self.spawn()
 
@@ -105,7 +105,7 @@ class Board:
         if self.collision():
             self.currentPiece.rotate(1)
 
-    def move(self, dir):    #directions = -1 or 1   #no moving down only direct placing
+    def moveSide(self, dir):    #directions = -1 or 1   #no moving down only direct placing
         self.currentPiece.x += dir
 
         if self.collision():
@@ -172,9 +172,9 @@ while running:
             if event.key == pygame.K_SPACE:
                 board.place()
             if event.key == pygame.K_LEFT:
-                board.move(-1)
+                board.moveSide(-1)
             if event.key == pygame.K_RIGHT:
-                board.move(1)
+                board.moveSide(1)
 
     board.update()
 
