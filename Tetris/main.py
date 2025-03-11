@@ -25,6 +25,5 @@ while True:
     
     screen.fill(bgrd)
     current_grid.draw_grid(screen=screen)   
-    block.draw(screen=screen)     
     pygame.display.update()
     clock.tick(FPS) 
