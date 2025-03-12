@@ -25,7 +25,16 @@ class Block:
             cell=Position(cell.row+self.rowoffset, cell.col+self.coloffset)
             updated_positions.append(cell)
         return updated_positions
-
+    
+    
+    def rotate(self):
+        self.rotated+=1
+        self.rotated%=len(self.cells)
+        
+    def undo_rotate(self):
+        self.rotated-=1
+        if(self.rotated==-1):
+            self.rotated=len(self.cells)-1
     
     def draw(self, screen):
         to_draw=self.get_cell_positions()

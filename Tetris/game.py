@@ -33,6 +33,11 @@ class Game:
         if not self.is_within_play():
             self.current_block.move(-1, 0)#reverting move if out of play bounds
 
+    def rotate(self): #rotate the current tetrominp
+        self.current_block.rotate()
+        if not self.is_within_play():
+            self.current_block.undo_rotate() #undo rotation if any cell of rotated state is out of bounds
+    
     def is_within_play(self): #checks if every cell of the tetromino is within play area
         cells=self.current_block.get_cell_positions()
         for cell in cells:
