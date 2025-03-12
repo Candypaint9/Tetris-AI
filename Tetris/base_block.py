@@ -30,5 +30,5 @@ class Block:
     def draw(self, screen):
         to_draw=self.get_cell_positions()
         for cell in to_draw: #Drawing the teromino
-            cell_rect=pygame.Rect(cell.col*self.cell_size+1, cell.row*self.cell_size, self.cell_size-1, self.cell_size-1)
+            cell_rect=pygame.Rect(cell.col*self.cell_size+1, cell.row*self.cell_size+1, self.cell_size-1, self.cell_size-1)
             pygame.draw.rect(screen, self.colors[self.id], cell_rect)

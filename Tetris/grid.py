@@ -18,6 +18,11 @@ class Grid:
             print()
     
 
+    def is_inside(self, row, col):#checks if a block's cell is within play area
+        if row>=0 and row<self.row_ct and col>=0 and col<self.col_ct:
+            return True
+        return False
+
     def draw_grid(self, screen):
         for row in range(self.row_ct):
             for col in range(self.col_ct):
