@@ -16,12 +16,6 @@ class Grid:
             for j in range(self.col_ct):
                 print(self.grid[i][j], end=" ") 
             print()
-    
-
-    def is_inside(self, row, col):#checks if a block's cell is within play area
-        if row>=0 and row<self.row_ct and col>=0 and col<self.col_ct:
-            return True
-        return False
 
     def draw_grid(self, screen):
         for row in range(self.row_ct):
@@ -30,3 +24,22 @@ class Grid:
                 cell_rect=pygame.Rect(col*self.cell_size+1, row*self.cell_size+1,  #+1 and -1 to draw the grid lines aswell
                                       self.cell_size-1, self. cell_size-1) #Populating the game grid with cells
                 pygame.draw.rect(screen, self.colors[cell], cell_rect)
+                
+    
+    def clear_filled_rows_and_shift(self):
+        filled=0
+        for row in range(self.row_ct-1, 0, -1):
+            check=True
+            for col in range(self.col_ct):
+                if self.grid[row][col]==0:
+                    check= False
+                    break
+            
+            if check==True: # row is filled completely
+                filled+=1
+            elif filled>0: #row has some empty cells and some row below it that is completely filled
+                for col in range(self.col_ct):
+                    self.grid[row+filled][col]=self.grid[row][col]
+                    self.grid[row][col]=0
+                    
+            
