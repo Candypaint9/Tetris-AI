@@ -19,13 +19,14 @@ GRID_COLOR = (199, 207, 214)
 class Piece:
     # Every piece is defined in terms of a 4x4 grid (all rotations)
     pieces = [
-        [[4, 5, 6, 7], [2, 6, 10, 14]],      # I
+        [],  # empty
+        [[2, 6, 10, 14], [4, 5, 6, 7]],      # I
         [[5, 6, 9, 10]],                     # O
         [[6, 7, 9, 10], [2, 6, 7, 11]],      # S
         [[5, 6, 10, 11], [2, 5, 6, 9]],      # Z
         [[2, 6, 9, 10], [5, 6, 7, 11], [2, 3, 6, 10], [1, 5, 6, 7]],  # J
         [[2, 6, 10, 11], [3, 5, 6, 7], [1, 2, 6, 10], [5, 6, 7, 9]],  # L
-        [[5, 6, 7, 10], [2, 6, 7, 10], [2, 5, 6, 7], [2, 5, 6, 10]]   # T
+        [[2, 5, 6, 7], [2, 5, 6, 10], [5, 6, 7, 10], [2, 6, 7, 10]]   # T
     ]
 
     colors = [
@@ -72,7 +73,10 @@ class Board:
         self.grid = []
         for i in range(ROWS): self.grid.append([0] * COLS)
 
-        self.currentPiece = None
+        self.currentPiece = Piece(self.xSpawn, self.ySpawn)
+        self.nextPiece = Piece(self.xSpawn, self.ySpawn)
+        self.heldPiece = None
+        self.switched = False
 
     def debugPrintGrid(self):       #just to print grid :/
         for row in range(ROWS):
@@ -91,7 +95,27 @@ class Board:
         self.draw(window)
 
     def spawn(self):
-        self.currentPiece = Piece(self.xSpawn, self.ySpawn)
+        self.currentPiece = self.nextPiece
+        self.nextPiece = Piece(self.xSpawn, self.ySpawn)
+
+    def hold(self):
+        if self.switched: 
+            return
+
+        if self.heldPiece is None:
+            self.heldPiece = self.currentPiece
+            self.currentPiece = None
+        else:
+            temp = self.currentPiece
+            self.currentPiece = self.heldPiece
+            self.heldPiece = temp
+        
+        #resetting the held piece
+        self.heldPiece.x = self.xSpawn
+        self.heldPiece.y = self.ySpawn
+        self.heldPiece.rotation = 0
+
+        self.switched = True
 
     def rotateACW(self):
         self.currentPiece.rotate(1)
@@ -110,6 +134,13 @@ class Board:
 
         if self.collision():
             self.currentPiece.x -= dir
+    
+    def moveDown(self):
+        self.currentPiece.y += 1
+        
+        if self.collision():
+            self.currentPiece.y -= 1
+            self.place()
 
     def place(self):    #to place the block (update the grid for the position of the block and set current block to none)
         for pos in self.currentPiece.getRelativePos():
@@ -119,6 +150,7 @@ class Board:
                 self.grid[y][x] = self.currentPiece.pieceType
 
         self.currentPiece = None
+        self.switched = False
 
     def collision(self):
         for pos in self.currentPiece.getRelativePos():
@@ -168,9 +200,9 @@ while running:
             if event.key == pygame.K_UP:
                 board.rotateCW()
             if event.key == pygame.K_DOWN:
-                board.rotateACW()
-            if event.key == pygame.K_SPACE:
-                board.place()
+                board.moveDown()
+            if event.key == pygame.K_c:
+                board.hold()
             if event.key == pygame.K_LEFT:
                 board.moveSide(-1)
             if event.key == pygame.K_RIGHT:
