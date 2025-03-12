@@ -91,6 +91,8 @@ class Board:
         if self.currentPiece is None:
             self.spawn()
 
+        self.clearLine()
+
         self.fillBoard(window)
         self.draw(window)
 
@@ -143,14 +145,20 @@ class Board:
             self.place()
 
     def place(self):    #to place the block (update the grid for the position of the block and set current block to none)
+
+        maxHeight = 20
+
         for pos in self.currentPiece.getRelativePos():
             x, y = self.currentPiece.getAbsolutePosition(pos)
             
             if not self.boundsCrossed(x, y):
                 self.grid[y][x] = self.currentPiece.pieceType
+                maxHeight = min(maxHeight, y)
 
         self.currentPiece = None
         self.switched = False
+
+        self.score += maxHeight     #Updates the score acc to how far below the piece is palced 
 
     def collision(self):
         for pos in self.currentPiece.getRelativePos():
@@ -160,8 +168,30 @@ class Board:
                 return True
         return False
 
-    def clearLine():    #checks which lines to clear and reduce position of all blocks above it by 1
-        pass
+    def clearLine(self):    #checks which lines to clear and reduce position of all blocks above it by 1
+
+        linesCleared = 0
+        for row in range(ROWS-1, 0, -1):    
+            toClear = True
+            for col in range(COLS):
+                if self.grid[row][col] == 0:
+                    toClear = False
+            
+            if toClear:
+                linesCleared += 1
+            if linesCleared:
+                for col in range(COLS):
+                    self.grid[row][col] = self.grid[row-1][col]
+            
+        #Updating Score
+        if linesCleared == 1:
+            self.score += 40
+        elif linesCleared == 2:
+            self.score += 100
+        elif linesCleared == 3:
+            self.score += 300
+        elif linesCleared == 4:
+            self.score += 1200
 
     def fillBoard(self, window):    #fill only the board with the grid color
         window.fill(GRID_COLOR)
@@ -199,7 +229,7 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
                 board.rotateCW()
-            if event.key == pygame.K_DOWN:
+            if event.key == pygame.K_DOWN or event.key == pygame.K_SPACE:
                 board.moveDown()
             if event.key == pygame.K_c:
                 board.hold()
@@ -209,6 +239,7 @@ while running:
                 board.moveSide(1)
 
     board.update()
+    print(board.score)
 
     pygame.display.update()
     clock.tick(FPS)
