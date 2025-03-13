@@ -3,19 +3,24 @@ import random
 
 pygame.init()
 
+BOARDS_ROWS = 1
+BOARDS_COLS = 2
+
 BOX_SIZE = 20
 ROWS = 21
 COLS = 10
 PADDING = 15
 STATS_WIDTH = 100
-WINDOW_HEIGHT = BOX_SIZE * ROWS + 2 * PADDING
-WINDOW_WIDTH = BOX_SIZE * COLS + STATS_WIDTH + 2 * PADDING
+BOARD_HEIGHT = BOX_SIZE * ROWS + 2 * PADDING
+BOARD_WIDTH = BOX_SIZE * COLS + STATS_WIDTH + 2 * PADDING
+
+WINDOW_HEIGHT = BOARD_HEIGHT * BOARDS_ROWS
+WINDOW_WIDTH = BOARD_WIDTH * BOARDS_COLS
 GRID_THICKNESS = 1
 
 FPS = 60
 
 TILE_COLOR = (10, 14, 18)
-WINDOW_BG_COLOR = (28, 7, 61)
 BG_COLOR = (97, 16, 135)    
 TEXT_COLOR = (217, 206, 222) 
 FONT_SIZE = 30
@@ -207,25 +212,26 @@ class Board:
             self.score += 1200
 
     def fillBoard(self, window):    #fill only the board with the grid color
-        window.fill(BG_COLOR)
+        boardRect = pygame.Rect(self.x, self.y, BOARD_WIDTH, BOARD_HEIGHT)
+        pygame.draw.rect(window, BG_COLOR, boardRect)
 
     def draw(self, window): 
         for row in range(ROWS):
             for col in range(COLS):
-                cell = pygame.Rect(col * BOX_SIZE + PADDING, row * BOX_SIZE + PADDING, BOX_SIZE - GRID_THICKNESS, BOX_SIZE - GRID_THICKNESS)
+                cell = pygame.Rect(self.x + col * BOX_SIZE + PADDING, self.y + row * BOX_SIZE + PADDING, BOX_SIZE - GRID_THICKNESS, BOX_SIZE - GRID_THICKNESS)
                 cellColor = Piece.colors[self.grid[row][col]]
                 pygame.draw.rect(window, cellColor, cell)
 
         for pos in self.currentPiece.getRelativePos():
             col, row = self.currentPiece.getAbsolutePosition(pos)
-            cell = pygame.Rect(col * BOX_SIZE + PADDING, row * BOX_SIZE + PADDING, BOX_SIZE - GRID_THICKNESS, BOX_SIZE - GRID_THICKNESS)
+            cell = pygame.Rect(self.x + col * BOX_SIZE + PADDING, self.y + row * BOX_SIZE + PADDING, BOX_SIZE - GRID_THICKNESS, BOX_SIZE - GRID_THICKNESS)
             cellColor = self.currentPiece.color
             pygame.draw.rect(window, cellColor, cell)
 
         #Drawing next piece      
         for row in range(4):
             for col in range(4):
-                cell = pygame.Rect((COLS+col) * BOX_SIZE + 2 * PADDING, row * BOX_SIZE + PADDING, BOX_SIZE - GRID_THICKNESS, BOX_SIZE - GRID_THICKNESS)
+                cell = pygame.Rect(self.x + (COLS+col) * BOX_SIZE + 2 * PADDING, self.y + row * BOX_SIZE + PADDING, BOX_SIZE - GRID_THICKNESS, BOX_SIZE - GRID_THICKNESS)
                 
                 cellColor = TILE_COLOR
                 if row*4+col in Piece.pieces[self.nextPiece.pieceType][0]:
@@ -236,7 +242,7 @@ class Board:
         #Drawing held piece
         for row in range(4):
             for col in range(4):
-                cell = pygame.Rect((COLS+col) * BOX_SIZE + 2 * PADDING, (4+row) * BOX_SIZE + 4*PADDING, BOX_SIZE - GRID_THICKNESS, BOX_SIZE - GRID_THICKNESS)
+                cell = pygame.Rect(self.x + (COLS+col) * BOX_SIZE + 2 * PADDING, self.y + (4+row) * BOX_SIZE + 4*PADDING, BOX_SIZE - GRID_THICKNESS, BOX_SIZE - GRID_THICKNESS)
                 
                 cellColor = TILE_COLOR
                 if self.heldPiece is not None and row*4+col in Piece.pieces[self.heldPiece.pieceType][0]:
@@ -247,8 +253,8 @@ class Board:
         #Drawing score
         scoreHeadingTile = FONT.render("SCORE", True, TEXT_COLOR)
         scoreTile = FONT.render(str(self.score), True, TEXT_COLOR)
-        window.blit(scoreHeadingTile, (COLS * BOX_SIZE + 2 * PADDING, 8 * BOX_SIZE + 7*PADDING, FONT_SIZE, FONT_SIZE))
-        window.blit(scoreTile, (COLS * BOX_SIZE + 2 * PADDING, 8 * BOX_SIZE + 9*PADDING, FONT_SIZE, FONT_SIZE))
+        window.blit(scoreHeadingTile, (self.x + COLS * BOX_SIZE + 2 * PADDING, self.y + 8 * BOX_SIZE + 7*PADDING, FONT_SIZE, FONT_SIZE))
+        window.blit(scoreTile, (self.x + COLS * BOX_SIZE + 2 * PADDING, self.y + 8 * BOX_SIZE + 9*PADDING, FONT_SIZE, FONT_SIZE))
 
 
 # The window with TILE_COLOR is supposed to contain many boards each with color BOARD_BG_COLOR(helpful during training process to visualize multiple boards at once)
@@ -257,6 +263,7 @@ window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 window.fill(TILE_COLOR)
 clock = pygame.time.Clock()
 board = Board(0, 0)
+board2 = Board(BOARD_WIDTH, 0)
 
 
 running = True
@@ -269,17 +276,22 @@ while running:
         if event.type == pygame.KEYDOWN and board.currentPiece is not None:
             if event.key == pygame.K_UP:
                 board.rotateCW()
+                board2.rotateCW()
             if event.key == pygame.K_DOWN or event.key == pygame.K_SPACE:
                 board.moveDown()
+                board2.moveDown()
             if event.key == pygame.K_c:
                 board.hold()
+                board2.hold()
             if event.key == pygame.K_LEFT:
                 board.moveSide(-1)
+                board2.moveSide(-1)
             if event.key == pygame.K_RIGHT:
                 board.moveSide(1)
+                board2.moveSide(1)
 
     running &= board.update()
-    print(board.score)
+    running &= board2.update()
 
     pygame.display.update()
     clock.tick(FPS)
