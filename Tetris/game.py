@@ -73,7 +73,8 @@ class Game:
     
     def draw(self, screen):
         self.grid.draw_grid(screen=screen)
-        self.current_block.draw(screen=screen)
+        self.current_block.draw(screen=screen, x_extra=21, y_extra=21)
+        self.next_block.draw(screen=screen, x_extra=300, y_extra=280)
         
     def restart(self):
         for row in range(self.row_ct):

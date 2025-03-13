@@ -36,8 +36,8 @@ class Block:
         if(self.rotated==-1):
             self.rotated=len(self.cells)-1
     
-    def draw(self, screen):
+    def draw(self, screen, x_extra, y_extra):
         to_draw=self.get_cell_positions()
         for cell in to_draw: #Drawing the teromino
-            cell_rect=pygame.Rect(cell.col*self.cell_size+21, cell.row*self.cell_size+21, self.cell_size-1, self.cell_size-1)
+            cell_rect=pygame.Rect(cell.col*self.cell_size+x_extra, cell.row*self.cell_size+y_extra, self.cell_size-1, self.cell_size-1)
             pygame.draw.rect(screen, self.colors[self.id], cell_rect)
