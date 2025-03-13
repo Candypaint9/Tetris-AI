@@ -21,7 +21,7 @@ class Grid:
         for row in range(self.row_ct):
             for col in range(self.col_ct):
                 cell=self.grid[row][col]
-                cell_rect=pygame.Rect(col*self.cell_size+1, row*self.cell_size+1,  #+1 and -1 to draw the grid lines aswell
+                cell_rect=pygame.Rect(col*self.cell_size+21, row*self.cell_size+21,  #+1 and -1 to draw the grid lines aswell
                                       self.cell_size-1, self. cell_size-1) #Populating the game grid with cells
                 pygame.draw.rect(screen, self.colors[cell], cell_rect)
                 

@@ -10,6 +10,8 @@ class Game:
         self.next_block=self.get_random_tetromino()
         self.row_ct=20
         self.col_ct=10
+        self.game_ends=False
+        
         
     def get_random_tetromino(self): #to generate random tetromino for the game
         if len(self.tetrominos)==0:
@@ -47,6 +49,8 @@ class Game:
         self.grid.clear_filled_rows_and_shift()
         self.current_block=self.next_block
         self.next_block=self.get_random_tetromino()
+        if not self.allowed_to_move():
+            self.game_ends=True
         
     def allowed_to_move(self): #if block can make move without any collision
         cells=self.current_block.get_cell_positions()
@@ -71,5 +75,11 @@ class Game:
         self.grid.draw_grid(screen=screen)
         self.current_block.draw(screen=screen)
         
-    
+    def restart(self):
+        for row in range(self.row_ct):
+            for col in range(self.col_ct):
+                self.grid.grid[row][col]=0
+        
+        self.current_block=self.get_random_tetromino()
+        self.next_block=self.get_random_tetromino()
     
