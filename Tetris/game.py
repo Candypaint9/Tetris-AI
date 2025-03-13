@@ -11,6 +11,7 @@ class Game:
         self.row_ct=20
         self.col_ct=10
         self.game_ends=False
+        self.score=0
         
         
     def get_random_tetromino(self): #to generate random tetromino for the game
@@ -46,7 +47,8 @@ class Game:
         cells=self.current_block.get_cell_positions()
         for cell in cells:
             self.grid.grid[cell.row][cell.col]=self.current_block.id
-        self.grid.clear_filled_rows_and_shift()
+        cleared=self.grid.clear_filled_rows_and_shift()
+        self.update_score(cleared, 0)
         self.current_block=self.next_block
         self.next_block=self.get_random_tetromino()
         if not self.allowed_to_move():
@@ -76,11 +78,25 @@ class Game:
         self.current_block.draw(screen=screen, x_extra=21, y_extra=21)
         self.next_block.draw(screen=screen, x_extra=300, y_extra=280)
         
+    
+    def update_score(self, lines_cleared, key_downs):
+        if lines_cleared==1:
+            self.score+=40
+        elif lines_cleared==2:
+            self.score+=100
+        elif lines_cleared==3:
+            self.score+=300
+        elif lines_cleared==4:
+            self.score+=1200
+        self.score+=key_downs
+        
+        
     def restart(self):
         for row in range(self.row_ct):
             for col in range(self.col_ct):
                 self.grid.grid[row][col]=0
-        
+                
+        self.score=0
         self.current_block=self.get_random_tetromino()
         self.next_block=self.get_random_tetromino()
     

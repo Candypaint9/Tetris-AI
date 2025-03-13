@@ -40,6 +40,6 @@ class Grid:
             elif filled>0: #row has some empty cells and some row below it that is completely filled
                 for col in range(self.col_ct):
                     self.grid[row+filled][col]=self.grid[row][col]
-                    self.grid[row][col]=0
-                    
+                    self.grid[row][col]=0    
+        return filled
             

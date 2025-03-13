@@ -40,6 +40,7 @@ while True:
             if not game.game_ends:
                 if event.key==pygame.K_DOWN:
                     game.move_down()
+                    game.update_score(0, 1)
                 if event.key==pygame.K_LEFT:
                     game.move_left()
                 if event.key==pygame.K_RIGHT:
@@ -53,8 +54,11 @@ while True:
           
         if event.type == GAME_UPDATE and not game.game_ends:
             game.move_down()
+            game.update_score(0, 1)
               
-        
+    
+    score_value = text_font.render(str(game.score), True, text_col)
+    
     screen.fill(bgrd)
     screen.blit(score_surface, (400, 20, 50, 50))
     screen.blit(next_surface, (400, 180, 50, 50))
@@ -66,7 +70,8 @@ while True:
     
     pygame.draw.rect(screen, rect_col, score_rect, 0, 15)
     pygame.draw.rect(screen, rect_col, next_rect, 0, 15)
-        
+    screen.blit(score_value, score_value.get_rect(centerx = score_rect.centerx, centery = score_rect.centery)) #displays score and centers it
+    
     game.draw(screen=screen)
     pygame.display.update()
     clock.tick(FPS) 
