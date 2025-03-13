@@ -28,7 +28,7 @@ next_rect = pygame.Rect(350, 215, 170, 180)
 game=Game()
 
 GAME_UPDATE = pygame.USEREVENT
-pygame.time.set_timer(GAME_UPDATE, 500) #auto push current tetromino down every 0.7s
+pygame.time.set_timer(GAME_UPDATE, 500) #auto push current tetromino down every 0.5s
 
 while True:
     for event in pygame.event.get(): #quit game of window closed
