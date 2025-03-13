@@ -1,25 +1,32 @@
 import pygame
 import random
 
-BOX_SIZE = 30
+pygame.init()
+
+BOX_SIZE = 20
 ROWS = 21
 COLS = 10
-PADDING = 10
-WINDOW_HEIGHT = BOX_SIZE * ROWS
-WINDOW_WIDTH = BOX_SIZE * COLS
+PADDING = 15
+STATS_WIDTH = 100
+WINDOW_HEIGHT = BOX_SIZE * ROWS + 2 * PADDING
+WINDOW_WIDTH = BOX_SIZE * COLS + STATS_WIDTH + 2 * PADDING
 GRID_THICKNESS = 1
 
 FPS = 60
 
-BG_COLOR = (10, 14, 18)
-BOARD_BG_COLOR = (28, 7, 61)
-GRID_COLOR = (199, 207, 214)
+TILE_COLOR = (10, 14, 18)
+WINDOW_BG_COLOR = (28, 7, 61)
+BG_COLOR = (97, 16, 135)    
+TEXT_COLOR = (217, 206, 222) 
+FONT_SIZE = 30
+FONT = pygame.font.Font(None, FONT_SIZE)
+
 
 
 class Piece:
     # Every piece is defined in terms of a 4x4 grid (all rotations)
     pieces = [
-        [],  # empty
+        [[]],  # empty
         [[2, 6, 10, 14], [4, 5, 6, 7]],      # I
         [[5, 6, 9, 10]],                     # O
         [[6, 7, 9, 10], [2, 6, 7, 11]],      # S
@@ -30,7 +37,7 @@ class Piece:
     ]
 
     colors = [
-        BOARD_BG_COLOR,
+        TILE_COLOR,
         (199, 6, 35), #I
         (6, 199, 73), #O
         (3, 44, 252), #S
@@ -89,16 +96,22 @@ class Board:
 
     def update(self):   # add in this function to push piece down after certain timer and if cant go down to call place function
         if self.currentPiece is None:
-            self.spawn()
+            if self.spawn() == False:   #collision has been detected
+                return False
 
         self.clearLine()
 
         self.fillBoard(window)
         self.draw(window)
 
+        return True
+
     def spawn(self):
         self.currentPiece = self.nextPiece
         self.nextPiece = Piece(self.xSpawn, self.ySpawn)
+        
+        if self.collision():
+            return False
 
     def hold(self):
         if self.switched: 
@@ -194,27 +207,54 @@ class Board:
             self.score += 1200
 
     def fillBoard(self, window):    #fill only the board with the grid color
-        window.fill(GRID_COLOR)
+        window.fill(BG_COLOR)
 
     def draw(self, window): 
         for row in range(ROWS):
             for col in range(COLS):
-                cell = pygame.Rect(col * BOX_SIZE, row * BOX_SIZE, BOX_SIZE - GRID_THICKNESS, BOX_SIZE - GRID_THICKNESS)
+                cell = pygame.Rect(col * BOX_SIZE + PADDING, row * BOX_SIZE + PADDING, BOX_SIZE - GRID_THICKNESS, BOX_SIZE - GRID_THICKNESS)
                 cellColor = Piece.colors[self.grid[row][col]]
                 pygame.draw.rect(window, cellColor, cell)
 
         for pos in self.currentPiece.getRelativePos():
             col, row = self.currentPiece.getAbsolutePosition(pos)
-            cell = pygame.Rect(col * BOX_SIZE, row * BOX_SIZE, BOX_SIZE - GRID_THICKNESS, BOX_SIZE - GRID_THICKNESS)
+            cell = pygame.Rect(col * BOX_SIZE + PADDING, row * BOX_SIZE + PADDING, BOX_SIZE - GRID_THICKNESS, BOX_SIZE - GRID_THICKNESS)
             cellColor = self.currentPiece.color
             pygame.draw.rect(window, cellColor, cell)
 
+        #Drawing next piece      
+        for row in range(4):
+            for col in range(4):
+                cell = pygame.Rect((COLS+col) * BOX_SIZE + 2 * PADDING, row * BOX_SIZE + PADDING, BOX_SIZE - GRID_THICKNESS, BOX_SIZE - GRID_THICKNESS)
+                
+                cellColor = TILE_COLOR
+                if row*4+col in Piece.pieces[self.nextPiece.pieceType][0]:
+                    cellColor = Piece.colors[self.nextPiece.pieceType]
+                    
+                pygame.draw.rect(window, cellColor, cell)
 
-# The window with BG_COLOR is supposed to contain many boards each with color BOARD_BG_COLOR(helpful during training process to visualize multiple boards at once)
+        #Drawing held piece
+        for row in range(4):
+            for col in range(4):
+                cell = pygame.Rect((COLS+col) * BOX_SIZE + 2 * PADDING, (4+row) * BOX_SIZE + 4*PADDING, BOX_SIZE - GRID_THICKNESS, BOX_SIZE - GRID_THICKNESS)
+                
+                cellColor = TILE_COLOR
+                if self.heldPiece is not None and row*4+col in Piece.pieces[self.heldPiece.pieceType][0]:
+                    cellColor = Piece.colors[self.heldPiece.pieceType]
+                    
+                pygame.draw.rect(window, cellColor, cell)
 
-pygame.init()
+        #Drawing score
+        scoreHeadingTile = FONT.render("SCORE", True, TEXT_COLOR)
+        scoreTile = FONT.render(str(self.score), True, TEXT_COLOR)
+        window.blit(scoreHeadingTile, (COLS * BOX_SIZE + 2 * PADDING, 8 * BOX_SIZE + 7*PADDING, FONT_SIZE, FONT_SIZE))
+        window.blit(scoreTile, (COLS * BOX_SIZE + 2 * PADDING, 8 * BOX_SIZE + 9*PADDING, FONT_SIZE, FONT_SIZE))
+
+
+# The window with TILE_COLOR is supposed to contain many boards each with color BOARD_BG_COLOR(helpful during training process to visualize multiple boards at once)
+
 window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-window.fill(BG_COLOR)
+window.fill(TILE_COLOR)
 clock = pygame.time.Clock()
 board = Board(0, 0)
 
@@ -226,7 +266,7 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        if event.type == pygame.KEYDOWN:
+        if event.type == pygame.KEYDOWN and board.currentPiece is not None:
             if event.key == pygame.K_UP:
                 board.rotateCW()
             if event.key == pygame.K_DOWN or event.key == pygame.K_SPACE:
@@ -238,7 +278,7 @@ while running:
             if event.key == pygame.K_RIGHT:
                 board.moveSide(1)
 
-    board.update()
+    running &= board.update()
     print(board.score)
 
     pygame.display.update()
