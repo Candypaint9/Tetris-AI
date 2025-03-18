@@ -3,14 +3,14 @@ import random
 
 pygame.init()
 
-BOARDS_ROWS = 1
+BOARDS_ROWS = 2
 BOARDS_COLS = 2
 
-BOX_SIZE = 20
+BOX_SIZE = 15
 ROWS = 21
 COLS = 10
-PADDING = 15
-STATS_WIDTH = 100
+PADDING = BOX_SIZE
+STATS_WIDTH = PADDING + 4 * BOX_SIZE
 BOARD_HEIGHT = BOX_SIZE * ROWS + 2 * PADDING
 BOARD_WIDTH = BOX_SIZE * COLS + STATS_WIDTH + 2 * PADDING
 
@@ -23,7 +23,7 @@ FPS = 60
 TILE_COLOR = (10, 14, 18)
 BG_COLOR = (97, 16, 135)    
 TEXT_COLOR = (217, 206, 222) 
-FONT_SIZE = 30
+FONT_SIZE = 25
 FONT = pygame.font.Font(None, FONT_SIZE)
 
 
@@ -263,7 +263,7 @@ window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 window.fill(TILE_COLOR)
 clock = pygame.time.Clock()
 board = Board(0, 0)
-board2 = Board(BOARD_WIDTH, 0)
+board2 = Board(BOARD_WIDTH, BOARD_HEIGHT)
 
 
 running = True
