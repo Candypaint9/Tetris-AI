@@ -3,29 +3,23 @@ import random
 
 pygame.init()
 
-BOARDS_ROWS = 2
-BOARDS_COLS = 2
-
-BOX_SIZE = 15
+BOX_SIZE = 10
 ROWS = 21
 COLS = 10
 PADDING = BOX_SIZE
 STATS_WIDTH = PADDING + 4 * BOX_SIZE
 BOARD_HEIGHT = BOX_SIZE * ROWS + 2 * PADDING
 BOARD_WIDTH = BOX_SIZE * COLS + STATS_WIDTH + 2 * PADDING
-
-WINDOW_HEIGHT = BOARD_HEIGHT * BOARDS_ROWS
-WINDOW_WIDTH = BOARD_WIDTH * BOARDS_COLS
 GRID_THICKNESS = 1
 
 FPS = 60
 
+# The window with TILE_COLOR is supposed to contain many boards each with color BOARD_BG_COLOR(helpful during training process to visualize multiple boards at once)
 TILE_COLOR = (10, 14, 18)
 BG_COLOR = (97, 16, 135)    
 TEXT_COLOR = (217, 206, 222) 
-FONT_SIZE = 25
+FONT_SIZE = int(BOX_SIZE * 1.5)
 FONT = pygame.font.Font(None, FONT_SIZE)
-
 
 
 class Piece:
@@ -99,7 +93,7 @@ class Board:
             return True
         return False
 
-    def update(self):   # add in this function to push piece down after certain timer and if cant go down to call place function
+    def update(self, window):   # add in this function to push piece down after certain timer and if cant go down to call place function
         if self.currentPiece is None:
             if self.spawn() == False:   #collision has been detected
                 return False
@@ -255,43 +249,3 @@ class Board:
         scoreTile = FONT.render(str(self.score), True, TEXT_COLOR)
         window.blit(scoreHeadingTile, (self.x + COLS * BOX_SIZE + 2 * PADDING, self.y + 8 * BOX_SIZE + 7*PADDING, FONT_SIZE, FONT_SIZE))
         window.blit(scoreTile, (self.x + COLS * BOX_SIZE + 2 * PADDING, self.y + 8 * BOX_SIZE + 9*PADDING, FONT_SIZE, FONT_SIZE))
-
-
-# The window with TILE_COLOR is supposed to contain many boards each with color BOARD_BG_COLOR(helpful during training process to visualize multiple boards at once)
-
-window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-window.fill(TILE_COLOR)
-clock = pygame.time.Clock()
-board = Board(0, 0)
-board2 = Board(BOARD_WIDTH, BOARD_HEIGHT)
-
-
-running = True
-
-while running:
-
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        if event.type == pygame.KEYDOWN and board.currentPiece is not None:
-            if event.key == pygame.K_UP:
-                board.rotateCW()
-                board2.rotateCW()
-            if event.key == pygame.K_DOWN or event.key == pygame.K_SPACE:
-                board.moveDown()
-                board2.moveDown()
-            if event.key == pygame.K_c:
-                board.hold()
-                board2.hold()
-            if event.key == pygame.K_LEFT:
-                board.moveSide(-1)
-                board2.moveSide(-1)
-            if event.key == pygame.K_RIGHT:
-                board.moveSide(1)
-                board2.moveSide(1)
-
-    running &= board.update()
-    running &= board2.update()
-
-    pygame.display.update()
-    clock.tick(FPS)

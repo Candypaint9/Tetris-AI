@@ -5,7 +5,7 @@ pop_size              = 20
 reset_on_extinction   = 0
 
 [DefaultGenome]
-num_inputs              = 214   #(temporary) 21*10 board size + 4 (absolute coordinates of the current piece tiles)
+num_inputs              = 222   #(temporary) 21*10 board size + 4 (absolute coordinates of the current piece tiles) + 4 + 4 (relative coordinates of held and next piece)
 num_hidden              = 2
 num_outputs             = 4     #(rotate left, rotate right, move left, move right)
 initial_connection      = partial_direct 0.5
