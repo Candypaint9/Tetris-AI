@@ -76,9 +76,9 @@ def game(genomes, config):
 
             #applying actions
             if output == 0:
-                board.rotateCW
+                board.rotateCW()
             elif output == 1:
-                board.rotateACW
+                board.rotateACW()
             elif output == 2:
                 board.moveSide(-1)
             elif output == 3:
