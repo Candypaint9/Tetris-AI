@@ -1,36 +1,121 @@
 import neat
 import pygame
-from tetris import Board, TILE_COLOR, BOARD_HEIGHT, BOARD_WIDTH, FPS
+from tetris import Board, Piece, TILE_COLOR, BOARD_HEIGHT, BOARD_WIDTH, FPS, COLS
+import multiprocessing
+import os
+import pickle
+import numpy as np
+import copy
 
-POPULATION_SIZE = 24    
+import time
+
+POPULATION_SIZE = 100 
 ROWS = 3
-COLS = POPULATION_SIZE // ROWS    # To increase rows and columns and to still have everything fit in the screen change tetris.BOX_SIZE
+COLS = 8    #POPULATION_SIZE // ROWS    # To increase rows and columns and to still have everything fit in the screen change tetris.BOX_SIZE
 
 WINDOW_HEIGHT = BOARD_HEIGHT * ROWS
 WINDOW_WIDTH = BOARD_WIDTH * COLS
+
+RUNS_PER_NET = 3
 
 
 window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 window.fill(TILE_COLOR)
 clock = pygame.time.Clock()
 
-boards = []
+#inputs
+#(temporary) 21*10 board size + 4 (absolute coordinates of the current piece tiles) + 4 + 4 (relative coordinates of held and next piece)
+#outputs
+#(rotate left, rotate right, move left, move right, hold, do nothing)
 
-#initialize population of boards
-for i in range(ROWS):
-    for j in range(COLS):
-        boards.append(Board(BOARD_WIDTH * j, BOARD_HEIGHT * i))
+def game(genomes, config):
 
-running = True
+    networks = []
+    boards = []
+    _genomes = []
 
-while running:
+    boardIndex = 0
+    for genome_id, genome in genomes:
+        network = neat.nn.FeedForwardNetwork.create(genome, config)
+        networks.append(network)
+        _genomes.append(genome)
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+        board = Board((boardIndex % COLS) * BOARD_WIDTH, (boardIndex % ROWS) * BOARD_HEIGHT, (True if boardIndex < 24 else False))
+        boards.append(board)
+        boardIndex += 1
 
-    for board in boards:
-        board.update(window)
+    alive = POPULATION_SIZE
+    while alive > 0:
+
+        alive = 0
+        for ind, board in enumerate(boards):
+
+            # creating inputs
+            inputs = []
+            _grid = copy.deepcopy(board.grid)
+            
+            for pos in board.currentPiece.getRelativePos():
+                col, row = board.currentPiece.getAbsolutePosition(pos)
+                if Piece.colors.index(board.currentPiece.color) > 0:
+                    _grid[row][col] = 1
+
+            for row in _grid:
+                for box in row:
+                    inputs.append(min(box, 1))
+
+            if board.heldPiece is None:
+                for i in range(4):
+                    inputs.append(0)
+            else:
+                for pos in board.heldPiece.getRelativePos():
+                    inputs.append(pos)
+            for pos in board.nextPiece.getRelativePos():
+                inputs.append(pos)
+            
+            output = np.argmax(networks[ind].activate(inputs))
+
+            #applying actions
+            if output == 0:
+                board.rotateCW
+            elif output == 1:
+                board.rotateACW
+            elif output == 2:
+                board.moveSide(-1)
+            elif output == 3:
+                board.moveSide(1)
+            elif output == 4:
+                board.hold()
+            
+            if board.currentPiece is not None:
+                board.moveDown()
+            
+            alive += int(board.update(window))
+            _genomes[ind].fitness = board.score
+
+            if board.gameOver:
+                boards.pop(ind)
+                _genomes.pop(ind)
+                networks.pop(ind)
         
-    pygame.display.update()
-    clock.tick(FPS)
+        pygame.display.update()
+        clock.tick(FPS)
+
+
+if __name__ == "__main__":
+    
+    local_dir = os.path.dirname(__file__)
+    config_file = os.path.join(local_dir, 'config.txt')
+
+    config = neat.config.Config(
+        neat.DefaultGenome, neat.DefaultReproduction,
+        neat.DefaultSpeciesSet, neat.DefaultStagnation,
+        config_file)
+
+    population = neat.Population(config)
+
+    # For stats
+    population.add_reporter(neat.StdOutReporter(True))
+    stats = neat.StatisticsReporter()
+    population.add_reporter(stats)
+
+    population.run(game)

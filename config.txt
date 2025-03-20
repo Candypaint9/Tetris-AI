@@ -1,13 +1,13 @@
 [NEAT]
-fitness_criterion     = max
-fitness_threshold     = 50.0
-pop_size              = 20
-reset_on_extinction   = 0
+fitness_criterion     = mean
+fitness_threshold     = 5000
+pop_size              = 100
+reset_on_extinction   = 1
 
 [DefaultGenome]
-num_inputs              = 222   #(temporary) 21*10 board size + 4 (absolute coordinates of the current piece tiles) + 4 + 4 (relative coordinates of held and next piece)
+num_inputs              = 218
 num_hidden              = 2
-num_outputs             = 4     #(rotate left, rotate right, move left, move right)
+num_outputs             = 6
 initial_connection      = partial_direct 0.5
 feed_forward            = True
 compatibility_disjoint_coefficient    = 1.0
@@ -52,8 +52,9 @@ compatibility_threshold = 3.0
 
 [DefaultStagnation]
 species_fitness_func = max
-max_stagnation  = 20
+max_stagnation  = 10
 
 [DefaultReproduction]
-elitism            = 2
+elitism            = 1
 survival_threshold = 0.2
+min_species_size = 3

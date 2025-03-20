@@ -67,7 +67,7 @@ class Piece:
     
 
 class Board:
-    def __init__(self, x, y):
+    def __init__(self, x, y, draw):
         self.x = x
         self.y = y
         self.height = BOX_SIZE * ROWS
@@ -84,6 +84,9 @@ class Board:
         self.heldPiece = None
         self.switched = False
 
+        self.gameOver = False
+        self.shouldDraw = draw
+
     def debugPrintGrid(self):       #just to print grid :/
         for row in range(ROWS):
                 print(self.grid[row])
@@ -96,6 +99,7 @@ class Board:
     def update(self, window):   # add in this function to push piece down after certain timer and if cant go down to call place function
         if self.currentPiece is None:
             if self.spawn() == False:   #collision has been detected
+                self.gameOver = True
                 return False
 
         self.clearLine()
