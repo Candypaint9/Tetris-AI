@@ -1,6 +1,6 @@
 import neat
 import pygame
-from tetris import Board, Piece, TILE_COLOR, BOARD_HEIGHT, BOARD_WIDTH, FPS, COLS
+from tetris import Board, Piece, TILE_COLOR, BOARD_HEIGHT, BOARD_WIDTH, FPS, COLS, ROWS
 import multiprocessing
 import os
 import pickle
@@ -9,12 +9,12 @@ import copy
 
 import time
 
-POPULATION_SIZE = 100 
-ROWS = 3
-COLS = 8    #POPULATION_SIZE // ROWS    # To increase rows and columns and to still have everything fit in the screen change tetris.BOX_SIZE
+POPULATION_SIZE = 200   #make sure to also change this in config.txt
+WINDOW_ROWS = 3
+WINDOW_COLS = 8    #POPULATION_SIZE // ROWS    # To increase rows and columns and to still have everything fit in the screen change tetris.BOX_SIZE
 
-WINDOW_HEIGHT = BOARD_HEIGHT * ROWS
-WINDOW_WIDTH = BOARD_WIDTH * COLS
+WINDOW_HEIGHT = BOARD_HEIGHT * WINDOW_ROWS
+WINDOW_WIDTH = BOARD_WIDTH * WINDOW_COLS
 
 RUNS_PER_NET = 3
 
@@ -28,6 +28,37 @@ clock = pygame.time.Clock()
 #outputs
 #(rotate left, rotate right, move left, move right, hold, do nothing)
 
+
+def getFitness(board):
+    
+    fitness = board.score
+
+    #for each empty space with a block above it give it fitness -= 1000
+    mean = 0
+    for col in range(COLS):
+        found = False
+        for row in range(ROWS):
+            if found and board.grid[row][col]:
+                fitness -= 1000
+            if board.grid[row][col]:
+                found = True
+                mean += ROWS-row
+    
+    mean //= COLS
+    dev = 0
+    for col in range(COLS):
+        found = False
+        for row in range(ROWS):
+            if board.grid[row][col]:
+                found = True
+                dev += abs(mean - row)
+                
+    dev //= COLS
+    fitness -= 500 * dev
+
+    return fitness
+
+
 def game(genomes, config):
 
     networks = []
@@ -40,12 +71,15 @@ def game(genomes, config):
         networks.append(network)
         _genomes.append(genome)
 
-        board = Board((boardIndex % COLS) * BOARD_WIDTH, (boardIndex % ROWS) * BOARD_HEIGHT, (True if boardIndex < 24 else False))
+        board = Board((boardIndex % WINDOW_COLS) * BOARD_WIDTH, (boardIndex % WINDOW_ROWS) * BOARD_HEIGHT, (True if boardIndex < 24 else False))
         boards.append(board)
         boardIndex += 1
 
     alive = POPULATION_SIZE
     while alive > 0:
+
+        for event in pygame.event.get():
+            continue
 
         alive = 0
         for ind, board in enumerate(boards):
@@ -69,6 +103,7 @@ def game(genomes, config):
             else:
                 for pos in board.heldPiece.getRelativePos():
                     inputs.append(pos)
+
             for pos in board.nextPiece.getRelativePos():
                 inputs.append(pos)
             
@@ -90,7 +125,9 @@ def game(genomes, config):
                 board.moveDown()
             
             alive += int(board.update(window))
-            _genomes[ind].fitness = board.score
+
+            # updating the fitness
+            _genomes[ind].fitness = getFitness(board)
 
             if board.gameOver:
                 boards.pop(ind)
