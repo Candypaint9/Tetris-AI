@@ -1,15 +1,15 @@
 import neat
 import pygame
 from tetris import Board, Piece, TILE_COLOR, BOARD_HEIGHT, BOARD_WIDTH, FPS, COLS, ROWS
-import multiprocessing
 import os
-import pickle
 import numpy as np
 import copy
+from collections import deque
+
 
 import time
 
-POPULATION_SIZE = 200   #make sure to also change this in config.txt
+POPULATION_SIZE = 24   #make sure to also change this in config.txt
 WINDOW_ROWS = 3
 WINDOW_COLS = 8    #POPULATION_SIZE // ROWS    # To increase rows and columns and to still have everything fit in the screen change tetris.BOX_SIZE
 
@@ -23,40 +23,44 @@ window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 window.fill(TILE_COLOR)
 clock = pygame.time.Clock()
 
-#inputs
-#(temporary) 21*10 board size + 4 (absolute coordinates of the current piece tiles) + 4 + 4 (relative coordinates of held and next piece)
-#outputs
-#(rotate left, rotate right, move left, move right, hold, do nothing)
+""""
+inputs
+1) score
+2) gaps (empty squares with blocks surrounding them)
+3) mean height
+4) mean deviation of height
 
 
-def getFitness(board):
+outputs: rotate left, rotate right, move left, move right, hold, do nothing
+"""
+
+
+def getFitness(board, weights = [3, -500, -10, 0]):
     
-    fitness = board.score
-
-    #for each empty space with a block above it give it fitness -= 1000
-    mean = 0
+    gaps = 0
+    meanHeight = 0.0
     for col in range(COLS):
         found = False
         for row in range(ROWS):
-            if found and board.grid[row][col]:
-                fitness -= 1000
-            if board.grid[row][col]:
+            if found and board.grid[row][col] == 0:
+                gaps += 1
+            if not found and board.grid[row][col]:
                 found = True
-                mean += ROWS-row
-    
-    mean //= COLS
-    dev = 0
+                meanHeight += ROWS - row
+    meanHeight /= COLS
+
+    heightDev = 0.0
     for col in range(COLS):
         found = False
         for row in range(ROWS):
-            if board.grid[row][col]:
+            if not found and board.grid[row][col]:
                 found = True
-                dev += abs(mean - row)
-                
-    dev //= COLS
-    fitness -= 500 * dev
+                heightDev += abs(meanHeight - row)
+    heightDev /= COLS
 
-    return fitness
+    print(board.score, gaps, meanHeight)
+
+    return weights[0] * board.score + weights[1] * gaps + weights[2] * meanHeight + weights[3] * heightDev
 
 
 def game(genomes, config):
@@ -83,46 +87,13 @@ def game(genomes, config):
 
         alive = 0
         for ind, board in enumerate(boards):
-
-            # creating inputs
+            
             inputs = []
-            _grid = copy.deepcopy(board.grid)
+            # checking all possible moves and calculating inputs
             
-            for pos in board.currentPiece.getRelativePos():
-                col, row = board.currentPiece.getAbsolutePosition(pos)
-                if Piece.colors.index(board.currentPiece.color) > 0:
-                    _grid[row][col] = 1
 
-            for row in _grid:
-                for box in row:
-                    inputs.append(min(box, 1))
-
-            if board.heldPiece is None:
-                for i in range(4):
-                    inputs.append(0)
-            else:
-                for pos in board.heldPiece.getRelativePos():
-                    inputs.append(pos)
-
-            for pos in board.nextPiece.getRelativePos():
-                inputs.append(pos)
             
-            output = np.argmax(networks[ind].activate(inputs))
-
-            #applying actions
-            if output == 0:
-                board.rotateCW()
-            elif output == 1:
-                board.rotateACW()
-            elif output == 2:
-                board.moveSide(-1)
-            elif output == 3:
-                board.moveSide(1)
-            elif output == 4:
-                board.hold()
-            
-            if board.currentPiece is not None:
-                board.moveDown()
+            outputs = networks[ind].activate(inputs)
             
             alive += int(board.update(window))
 
@@ -138,6 +109,116 @@ def game(genomes, config):
         clock.tick(FPS)
 
 
+def getAllPossiblePositions(board):
+
+    possible_positions = {}  # Maps (x, y, rotation) -> move sequence
+    visited = set()
+    
+    # Original piece state
+    original_x, original_y, original_rotation = board.currentPiece.x, board.currentPiece.y, board.currentPiece.rotation
+    
+    # BFS queue: (x, y, rotation, move_sequence)
+    queue = deque([(original_x, original_y, original_rotation, [])])
+    visited.add((original_x, original_y, original_rotation))
+
+    while queue:
+        x, y, rotation, moves = queue.popleft()
+
+        # Move piece to this state
+        board.currentPiece.x, board.currentPiece.y, board.currentPiece.rotation = x, y, rotation
+
+        # checking left, right
+        for dx, move in [(-1, "Left"), (1, "Right")]:
+            new_x, new_y, new_rotation = x + dx, y, rotation
+            if (new_x, new_y, new_rotation) not in visited:
+                board.currentPiece.x, board.currentPiece.y, board.currentPiece.rotation = new_x, new_y, new_rotation
+                if not board.collision():
+                    visited.add((new_x, new_y, new_rotation))
+                    queue.append((new_x, new_y, new_rotation, moves + [move]))
+        
+        #checking rotations
+        for d_rotation, move in [(1, "RotateCW"), (-1, "RotateACW")]:
+            new_x, new_y, new_rotation = x, y, (rotation + d_rotation) % len(Piece.pieces[board.currentPiece.pieceType])
+            if (new_x, new_y, new_rotation) not in visited:
+                board.currentPiece.x, board.currentPiece.y, board.currentPiece.rotation = new_x, new_y, new_rotation
+                if not board.collision():
+                    visited.add((new_x, new_y, new_rotation))
+                    queue.append((new_x, new_y, new_rotation, moves + [move]))
+
+        # checking down
+        new_x, new_y, new_rotation = x, y+1, rotation
+        if (new_x, new_y, new_rotation) not in visited:
+            board.currentPiece.x, board.currentPiece.y, board.currentPiece.rotation = new_x, new_y, new_rotation
+            if not board.collision():
+                visited.add((new_x, new_y, new_rotation))
+                queue.append((new_x, new_y, new_rotation, moves + ["Down"]))
+            elif (new_x, new_y, new_rotation) not in possible_positions.keys():
+                possible_positions[(new_x, new_y, new_rotation)] = moves
+
+    # Restore original state
+    board.currentPiece.x, board.currentPiece.y, board.currentPiece.rotation = original_x, original_y, original_rotation
+
+    return possible_positions
+
+
+
+def simulateMoves(board, moves):
+    
+    for i, move in enumerate(moves):
+
+        for event in pygame.event.get():
+            continue
+
+        if move == 'Down':
+            board.moveDown()
+        elif move == 'Right':
+            board.moveSide(1)
+        elif move == 'Left':
+            board.moveSide(-1)
+        elif move == 'RotateCW':
+            board.rotateCW()
+        elif move == 'RotateACW':
+            board.rotateACW()
+
+        board.update(window)
+        pygame.display.update()
+        clock.tick(FPS)
+
+    while not board.collision():
+        board.currentPiece.y += 1
+    board.currentPiece.y -= 1
+    board.place()
+    
+    board.update(window)
+    pygame.display.update()
+    clock.tick(FPS)
+
+
+def pureSearch():
+
+    board = Board(0, 0)
+
+    running = True
+    while running:
+
+        moveSequences = getAllPossiblePositions(board)
+
+        bestFitness = float("-inf")
+        bestSequence = None
+
+        for state in moveSequences.keys():
+            tempBoard = copy.deepcopy(board)
+            #tempBoard.shouldDraw = False
+            simulateMoves(tempBoard, moveSequences[state])
+
+            fitness = getFitness(tempBoard)
+            if fitness > bestFitness:
+                bestSequence = moveSequences[state]
+                bestFitness = fitness
+
+        simulateMoves(board, bestSequence)
+
+
 if __name__ == "__main__":
     
     local_dir = os.path.dirname(__file__)
@@ -147,12 +228,15 @@ if __name__ == "__main__":
         neat.DefaultGenome, neat.DefaultReproduction,
         neat.DefaultSpeciesSet, neat.DefaultStagnation,
         config_file)
+    
+    pureSearch()
 
-    population = neat.Population(config)
+    # population = neat.Population(config)
 
-    # For stats
-    population.add_reporter(neat.StdOutReporter(True))
-    stats = neat.StatisticsReporter()
-    population.add_reporter(stats)
+    # # For stats
+    # population.add_reporter(neat.StdOutReporter(True))
+    # stats = neat.StatisticsReporter()
+    # population.add_reporter(stats)
 
-    population.run(game)
+    # population.run(game)
+

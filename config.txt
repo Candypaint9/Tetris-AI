@@ -1,11 +1,11 @@
 [NEAT]
 fitness_criterion     = mean
 fitness_threshold     = 5000
-pop_size              = 200
+pop_size              = 24
 reset_on_extinction   = 1
 
 [DefaultGenome]
-num_inputs              = 218
+num_inputs              = 5
 num_hidden              = 2
 num_outputs             = 6
 initial_connection      = partial_direct 0.5

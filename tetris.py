@@ -67,7 +67,7 @@ class Piece:
     
 
 class Board:
-    def __init__(self, x, y, draw):
+    def __init__(self, x, y, draw = True):
         self.x = x
         self.y = y
         self.height = BOX_SIZE * ROWS
@@ -97,15 +97,17 @@ class Board:
         return False
 
     def update(self, window):   # add in this function to push piece down after certain timer and if cant go down to call place function
+        
+        self.clearLine()
+
         if self.currentPiece is None:
             if self.spawn() == False:   #collision has been detected
                 self.gameOver = True
                 return False
 
-        self.clearLine()
-
-        self.fillBoard(window)
-        self.draw(window)
+        if self.shouldDraw:
+            self.fillBoard(window)
+            self.draw(window)
 
         return True
 
