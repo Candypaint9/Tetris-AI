@@ -9,14 +9,12 @@ from collections import deque
 
 import time
 
-POPULATION_SIZE = 24   #make sure to also change this in config.txt
-WINDOW_ROWS = 3
-WINDOW_COLS = 8    #POPULATION_SIZE // ROWS    # To increase rows and columns and to still have everything fit in the screen change tetris.BOX_SIZE
+POPULATION_SIZE = 1   #make sure to also change this in config.txt
+WINDOW_ROWS = 1
+WINDOW_COLS = 1    #POPULATION_SIZE // ROWS    # To increase rows and columns and to still have everything fit in the screen change tetris.BOX_SIZE
 
 WINDOW_HEIGHT = BOARD_HEIGHT * WINDOW_ROWS
 WINDOW_WIDTH = BOARD_WIDTH * WINDOW_COLS
-
-RUNS_PER_NET = 3
 
 
 window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -35,7 +33,7 @@ outputs: rotate left, rotate right, move left, move right, hold, do nothing
 """
 
 
-def getFitness(board, weights = [3, -500, -10, 0]):
+def getFitness(board, weights = [5, -500, -1, 0]):
     
     gaps = 0
     meanHeight = 0.0
@@ -58,8 +56,6 @@ def getFitness(board, weights = [3, -500, -10, 0]):
                 heightDev += abs(meanHeight - row)
     heightDev /= COLS
 
-    print(board.score, gaps, meanHeight)
-
     return weights[0] * board.score + weights[1] * gaps + weights[2] * meanHeight + weights[3] * heightDev
 
 
@@ -75,7 +71,7 @@ def game(genomes, config):
         networks.append(network)
         _genomes.append(genome)
 
-        board = Board((boardIndex % WINDOW_COLS) * BOARD_WIDTH, (boardIndex % WINDOW_ROWS) * BOARD_HEIGHT, (True if boardIndex < 24 else False))
+        board = Board((boardIndex % WINDOW_COLS) * BOARD_WIDTH, (boardIndex % WINDOW_ROWS) * BOARD_HEIGHT, (True if boardIndex < WINDOW_COLS * WINDOW_ROWS else False))
         boards.append(board)
         boardIndex += 1
 
@@ -137,8 +133,9 @@ def getAllPossiblePositions(board):
                     queue.append((new_x, new_y, new_rotation, moves + [move]))
         
         #checking rotations
-        for d_rotation, move in [(1, "RotateCW"), (-1, "RotateACW")]:
-            new_x, new_y, new_rotation = x, y, (rotation + d_rotation) % len(Piece.pieces[board.currentPiece.pieceType])
+        mxRot = len(Piece.pieces[board.currentPiece.pieceType])
+        for d_rotation, move in [(1, "RotateACW"), (-1, "RotateCW")]:
+            new_x, new_y, new_rotation = x, y, ((rotation + d_rotation) % mxRot + mxRot) % mxRot
             if (new_x, new_y, new_rotation) not in visited:
                 board.currentPiece.x, board.currentPiece.y, board.currentPiece.rotation = new_x, new_y, new_rotation
                 if not board.collision():
@@ -152,8 +149,8 @@ def getAllPossiblePositions(board):
             if not board.collision():
                 visited.add((new_x, new_y, new_rotation))
                 queue.append((new_x, new_y, new_rotation, moves + ["Down"]))
-            elif (new_x, new_y, new_rotation) not in possible_positions.keys():
-                possible_positions[(new_x, new_y, new_rotation)] = moves
+            elif (x, y, rotation) not in possible_positions.keys():
+                possible_positions[(x, y, rotation)] = moves + ["Down"]   # for placing block
 
     # Restore original state
     board.currentPiece.x, board.currentPiece.y, board.currentPiece.rotation = original_x, original_y, original_rotation
@@ -179,19 +176,10 @@ def simulateMoves(board, moves):
             board.rotateCW()
         elif move == 'RotateACW':
             board.rotateACW()
-
+                
         board.update(window)
         pygame.display.update()
         clock.tick(FPS)
-
-    while not board.collision():
-        board.currentPiece.y += 1
-    board.currentPiece.y -= 1
-    board.place()
-    
-    board.update(window)
-    pygame.display.update()
-    clock.tick(FPS)
 
 
 def pureSearch():
@@ -206,17 +194,21 @@ def pureSearch():
         bestFitness = float("-inf")
         bestSequence = None
 
-        for state in moveSequences.keys():
+        for sequence in moveSequences.keys():
             tempBoard = copy.deepcopy(board)
-            #tempBoard.shouldDraw = False
-            simulateMoves(tempBoard, moveSequences[state])
+            tempBoard.shouldDraw = False
+            tempBoard.currentPiece.x, tempBoard.currentPiece.y, tempBoard.currentPiece.rotation = sequence[0], sequence[1], sequence[2]
+            tempBoard.place()
+            tempBoard.update(window)
 
             fitness = getFitness(tempBoard)
             if fitness > bestFitness:
-                bestSequence = moveSequences[state]
+                bestSequence = moveSequences[sequence]
                 bestFitness = fitness
 
         simulateMoves(board, bestSequence)
+        running = not board.gameOver
+        #time.sleep(0.5)
 
 
 if __name__ == "__main__":

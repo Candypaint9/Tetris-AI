@@ -3,7 +3,7 @@ import random
 
 pygame.init()
 
-BOX_SIZE = 10
+BOX_SIZE = 20
 ROWS = 21
 COLS = 10
 PADDING = BOX_SIZE
@@ -98,12 +98,12 @@ class Board:
 
     def update(self, window):   # add in this function to push piece down after certain timer and if cant go down to call place function
         
-        self.clearLine()
-
         if self.currentPiece is None:
             if self.spawn() == False:   #collision has been detected
                 self.gameOver = True
                 return False
+            
+        self.clearLine()
 
         if self.shouldDraw:
             self.fillBoard(window)
@@ -114,9 +114,14 @@ class Board:
     def spawn(self):
         self.currentPiece = self.nextPiece
         self.nextPiece = Piece(self.xSpawn, self.ySpawn)
+
+        # to reduce chance of same piece spawning again
+        if self.nextPiece == self.currentPiece:         
+            self.nextPiece = Piece(self.xSpawn, self.ySpawn)
         
         if self.collision():
             return False
+        return True
 
     def hold(self):
         if self.switched: 
@@ -188,18 +193,18 @@ class Board:
 
     def clearLine(self):    #checks which lines to clear and reduce position of all blocks above it by 1
 
+        newGrid = [[0] * COLS for _ in range(ROWS)]  # Create a new empty grid
+        writeRow = ROWS - 1  # Start filling from the bottom
         linesCleared = 0
-        for row in range(ROWS-1, 0, -1):    
-            toClear = True
-            for col in range(COLS):
-                if self.grid[row][col] == 0:
-                    toClear = False
-            
-            if toClear:
+
+        for row in range(ROWS - 1, -1, -1):
+            if 0 in self.grid[row]:  
+                newGrid[writeRow] = self.grid[row]  
+                writeRow -= 1  
+            else:
                 linesCleared += 1
-            if linesCleared:
-                for col in range(COLS):
-                    self.grid[row][col] = self.grid[row-1][col]
+
+        self.grid = newGrid  
             
         #Updating Score
         if linesCleared == 1:
@@ -255,3 +260,30 @@ class Board:
         scoreTile = FONT.render(str(self.score), True, TEXT_COLOR)
         window.blit(scoreHeadingTile, (self.x + COLS * BOX_SIZE + 2 * PADDING, self.y + 8 * BOX_SIZE + 7*PADDING, FONT_SIZE, FONT_SIZE))
         window.blit(scoreTile, (self.x + COLS * BOX_SIZE + 2 * PADDING, self.y + 8 * BOX_SIZE + 9*PADDING, FONT_SIZE, FONT_SIZE))
+
+
+# test
+# window = pygame.display.set_mode((BOARD_WIDTH, BOARD_HEIGHT))
+# window.fill(TILE_COLOR)
+# clock = pygame.time.Clock()
+# board = Board(0, 0)
+
+# while True:
+#     for event in pygame.event.get():
+
+#         if event.type == pygame.KEYDOWN:
+#             if event.key == pygame.K_SPACE:
+#                 board.moveDown()
+#             elif event.key == pygame.K_LEFT:
+#                 board.moveSide(-1)
+#             elif event.key == pygame.K_RIGHT:
+#                 board.moveSide(1)
+#             elif event.key == pygame.K_UP:
+#                 board.rotateCW()
+#             elif event.key == pygame.K_DOWN:
+#                 board.rotateACW()
+    
+    
+#     board.update(window)
+#     pygame.display.update()
+#     clock.tick(FPS)
