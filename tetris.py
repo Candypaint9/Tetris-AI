@@ -3,7 +3,7 @@ import random
 
 pygame.init()
 
-BOX_SIZE = 20
+BOX_SIZE = 30
 ROWS = 21
 COLS = 10
 PADDING = BOX_SIZE
@@ -84,6 +84,7 @@ class Board:
         self.heldPiece = None
         self.switched = False
 
+        self.prevClearedLines = 0
         self.gameOver = False
         self.shouldDraw = draw
 
@@ -103,7 +104,7 @@ class Board:
                 self.gameOver = True
                 return False
             
-        self.clearLine()
+        self.prevClearedLines = self.clearLines()
 
         if self.shouldDraw:
             self.fillBoard(window)
@@ -191,7 +192,7 @@ class Board:
                 return True
         return False
 
-    def clearLine(self):    #checks which lines to clear and reduce position of all blocks above it by 1
+    def clearLines(self):    #checks which lines to clear and reduce position of all blocks above it by 1
 
         newGrid = [[0] * COLS for _ in range(ROWS)]  # Create a new empty grid
         writeRow = ROWS - 1  # Start filling from the bottom
@@ -215,6 +216,8 @@ class Board:
             self.score += 300
         elif linesCleared == 4:
             self.score += 1200
+
+        return linesCleared
 
     def fillBoard(self, window):    #fill only the board with the grid color
         boardRect = pygame.Rect(self.x, self.y, BOARD_WIDTH, BOARD_HEIGHT)

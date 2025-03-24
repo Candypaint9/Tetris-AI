@@ -5,6 +5,7 @@ import os
 import numpy as np
 import copy
 from collections import deque
+import heuristics
 
 
 import time
@@ -24,39 +25,19 @@ clock = pygame.time.Clock()
 """"
 inputs
 1) score
-2) gaps (empty squares with blocks surrounding them)
-3) mean height
-4) mean deviation of height
+2) trueGaps
+3) partialGaps
+4) max height
+5) bumpiness
+6) lines cleared
 
-
-outputs: rotate left, rotate right, move left, move right, hold, do nothing
+outputs: weights
 """
 
 
-def getFitness(board, weights = [5, -500, -1, 0]):
+def heuristic(board, weights = [10, -600, -50, -15, -20, 150]):
     
-    gaps = 0
-    meanHeight = 0.0
-    for col in range(COLS):
-        found = False
-        for row in range(ROWS):
-            if found and board.grid[row][col] == 0:
-                gaps += 1
-            if not found and board.grid[row][col]:
-                found = True
-                meanHeight += ROWS - row
-    meanHeight /= COLS
-
-    heightDev = 0.0
-    for col in range(COLS):
-        found = False
-        for row in range(ROWS):
-            if not found and board.grid[row][col]:
-                found = True
-                heightDev += abs(meanHeight - row)
-    heightDev /= COLS
-
-    return weights[0] * board.score + weights[1] * gaps + weights[2] * meanHeight + weights[3] * heightDev
+    return heuristics.calcHeuristic(board, weights)
 
 
 def game(genomes, config):
@@ -94,7 +75,7 @@ def game(genomes, config):
             alive += int(board.update(window))
 
             # updating the fitness
-            _genomes[ind].fitness = getFitness(board)
+            _genomes[ind].fitness = heuristic(board)
 
             if board.gameOver:
                 boards.pop(ind)
@@ -158,6 +139,28 @@ def getAllPossiblePositions(board):
     return possible_positions
 
 
+def getBestMoveSequence(board):
+    
+    moveSequences = getAllPossiblePositions(board)
+
+    bestHeuristic = float("-inf")
+    bestSequence = None
+
+    for sequence in moveSequences.keys():
+        tempBoard = copy.deepcopy(board)
+        tempBoard.shouldDraw = False
+        tempBoard.currentPiece.x, tempBoard.currentPiece.y, tempBoard.currentPiece.rotation = sequence[0], sequence[1], sequence[2]
+        tempBoard.place()
+        tempBoard.update(window)
+
+        fitness = heuristic(tempBoard)
+        if fitness > bestHeuristic:
+            bestSequence = moveSequences[sequence]
+            bestHeuristic = fitness
+
+    return bestSequence
+
+
 
 def simulateMoves(board, moves):
     
@@ -189,26 +192,10 @@ def pureSearch():
     running = True
     while running:
 
-        moveSequences = getAllPossiblePositions(board)
-
-        bestFitness = float("-inf")
-        bestSequence = None
-
-        for sequence in moveSequences.keys():
-            tempBoard = copy.deepcopy(board)
-            tempBoard.shouldDraw = False
-            tempBoard.currentPiece.x, tempBoard.currentPiece.y, tempBoard.currentPiece.rotation = sequence[0], sequence[1], sequence[2]
-            tempBoard.place()
-            tempBoard.update(window)
-
-            fitness = getFitness(tempBoard)
-            if fitness > bestFitness:
-                bestSequence = moveSequences[sequence]
-                bestFitness = fitness
+        bestSequence = getBestMoveSequence(board)
 
         simulateMoves(board, bestSequence)
         running = not board.gameOver
-        #time.sleep(0.5)
 
 
 if __name__ == "__main__":
