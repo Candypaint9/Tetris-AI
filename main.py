@@ -35,55 +35,9 @@ outputs: weights
 """
 
 
-def heuristic(board, weights = [10, -600, -50, -15, -20, 150]):
+def heuristic(board, weights = [5, -600, -100, -6, -12, 300]):
     
     return heuristics.calcHeuristic(board, weights)
-
-
-def game(genomes, config):
-
-    networks = []
-    boards = []
-    _genomes = []
-
-    boardIndex = 0
-    for genome_id, genome in genomes:
-        network = neat.nn.FeedForwardNetwork.create(genome, config)
-        networks.append(network)
-        _genomes.append(genome)
-
-        board = Board((boardIndex % WINDOW_COLS) * BOARD_WIDTH, (boardIndex % WINDOW_ROWS) * BOARD_HEIGHT, (True if boardIndex < WINDOW_COLS * WINDOW_ROWS else False))
-        boards.append(board)
-        boardIndex += 1
-
-    alive = POPULATION_SIZE
-    while alive > 0:
-
-        for event in pygame.event.get():
-            continue
-
-        alive = 0
-        for ind, board in enumerate(boards):
-            
-            inputs = []
-            # checking all possible moves and calculating inputs
-            
-
-            
-            outputs = networks[ind].activate(inputs)
-            
-            alive += int(board.update(window))
-
-            # updating the fitness
-            _genomes[ind].fitness = heuristic(board)
-
-            if board.gameOver:
-                boards.pop(ind)
-                _genomes.pop(ind)
-                networks.pop(ind)
-        
-        pygame.display.update()
-        clock.tick(FPS)
 
 
 def getAllPossiblePositions(board):
@@ -196,6 +150,52 @@ def pureSearch():
 
         simulateMoves(board, bestSequence)
         running = not board.gameOver
+
+
+def game(genomes, config):
+
+    networks = []
+    boards = []
+    _genomes = []
+
+    boardIndex = 0
+    for genome_id, genome in genomes:
+        network = neat.nn.FeedForwardNetwork.create(genome, config)
+        networks.append(network)
+        _genomes.append(genome)
+
+        board = Board((boardIndex % WINDOW_COLS) * BOARD_WIDTH, (boardIndex % WINDOW_ROWS) * BOARD_HEIGHT, (True if boardIndex < WINDOW_COLS * WINDOW_ROWS else False))
+        boards.append(board)
+        boardIndex += 1
+
+    alive = POPULATION_SIZE
+    while alive > 0:
+
+        for event in pygame.event.get():
+            continue
+
+        alive = 0
+        for ind, board in enumerate(boards):
+            
+            inputs = []
+            # checking all possible moves and calculating inputs
+            
+
+            
+            outputs = networks[ind].activate(inputs)
+            
+            alive += int(board.update(window))
+
+            # updating the fitness
+            _genomes[ind].fitness = heuristic(board)
+
+            if board.gameOver:
+                boards.pop(ind)
+                _genomes.pop(ind)
+                networks.pop(ind)
+        
+        pygame.display.update()
+        clock.tick(FPS)
 
 
 if __name__ == "__main__":
