@@ -66,6 +66,17 @@ def clearedLines(board):
     return board.prevClearedLines
 
 
+def getIndividualHeuristics(board):
+    
+    _gaps = gaps(board)
+
+    parameters = [
+        score(board), _gaps[0], _gaps[1], maxHeight(board), bumpiness(board), clearedLines(board)
+    ]
+
+    return parameters
+
+
 def calcHeuristic(board, weights):
 
     _gaps = gaps(board)

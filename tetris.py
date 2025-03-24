@@ -3,7 +3,7 @@ import random
 
 pygame.init()
 
-BOX_SIZE = 30
+BOX_SIZE = 10
 ROWS = 21
 COLS = 10
 PADDING = BOX_SIZE
