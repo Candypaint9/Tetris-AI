@@ -9,7 +9,7 @@ window = None
 clock = None
 
 
-def game(network):
+def game(network, fastMode = False):
 
     window = pygame.display.set_mode((BOARD_WIDTH, BOARD_HEIGHT))
     window.fill(TILE_COLOR)
@@ -28,12 +28,18 @@ def game(network):
                 pygame.quit()
                 quit()
 
-        if moveIndex >= len(moveSequence):
-            moveIndex = 0
-            moveSequence = getBestMoveSequence(board, network)[0]
-        
-        simulateMove(board, moveSequence[moveIndex])
-        moveIndex += 1
+        #to simulate moves one by one or to directly place
+        if fastMode:
+            move = getBestMoveSequence(board, network)[1]
+            board.currentPiece.x, board.currentPiece.y, board.currentPiece.rotation = move[0], move[1], move[2]
+            board.place()
+        else:
+            if moveIndex >= len(moveSequence):
+                moveIndex = 0
+                moveSequence = getBestMoveSequence(board, network)[0]
+            
+            simulateMove(board, moveSequence[moveIndex])
+            moveIndex += 1
         
         board.update(window)
         pygame.display.update()
@@ -56,4 +62,4 @@ if __name__ == "__main__":
     
     network = neat.nn.FeedForwardNetwork.create(genome, config)
 
-    game(network)
+    game(network, True)
