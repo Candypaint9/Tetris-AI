@@ -8,9 +8,8 @@ from tetris import Board, Piece, TILE_COLOR, BOARD_HEIGHT, BOARD_WIDTH, FPS, COL
 import heuristics
 
 
-POPULATION_SIZE = 200   #make sure to also change this in config.txt
 WINDOW_ROWS = 3
-WINDOW_COLS = 8    #POPULATION_SIZE // ROWS    # To increase rows and columns and to still have everything fit in the screen change tetris.BOX_SIZE
+WINDOW_COLS = 8    # To increase rows and columns and to still have everything fit in the screen change tetris.BOX_SIZE
 
 WINDOW_HEIGHT = BOARD_HEIGHT * WINDOW_ROWS
 WINDOW_WIDTH = BOARD_WIDTH * WINDOW_COLS
