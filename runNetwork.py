@@ -8,6 +8,8 @@ from train import simulateMove, getBestMoveSequence
 window = None
 clock = None
 
+# when true moves simulation isnt shown and pieces are instantly placed
+fastMode = True
 
 def game(network, fastMode = False):
 
@@ -61,7 +63,7 @@ def runGame():
     
     network = neat.nn.FeedForwardNetwork.create(genome, config)
 
-    game(network, True)
+    game(network, fastMode)
 
 
 if __name__ == "__main__":
