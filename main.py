@@ -1,18 +1,16 @@
 import neat
 import pygame
-from tetris import Board, Piece, TILE_COLOR, BOARD_HEIGHT, BOARD_WIDTH, FPS, COLS, ROWS
+import pickle
 import os
-import numpy as np
 import copy
 from collections import deque
+from tetris import Board, Piece, TILE_COLOR, BOARD_HEIGHT, BOARD_WIDTH, FPS, COLS, ROWS
 import heuristics
 
 
-import time
-
-POPULATION_SIZE = 1   #make sure to also change this in config.txt
-WINDOW_ROWS = 1
-WINDOW_COLS = 1    #POPULATION_SIZE // ROWS    # To increase rows and columns and to still have everything fit in the screen change tetris.BOX_SIZE
+POPULATION_SIZE = 200   #make sure to also change this in config.txt
+WINDOW_ROWS = 3
+WINDOW_COLS = 8    #POPULATION_SIZE // ROWS    # To increase rows and columns and to still have everything fit in the screen change tetris.BOX_SIZE
 
 WINDOW_HEIGHT = BOARD_HEIGHT * WINDOW_ROWS
 WINDOW_WIDTH = BOARD_WIDTH * WINDOW_COLS
@@ -33,11 +31,6 @@ inputs
 
 outputs: weights
 """
-
-
-def heuristic(board, weights = [5, -600, -100, -6, -12, 300]):
-    
-    return heuristics.calcHeuristic(board, weights)
 
 
 def getAllPossiblePositions(board):
@@ -93,50 +86,147 @@ def getAllPossiblePositions(board):
     return possible_positions
 
 
-def getBestMoveSequence(board):
+def getBestMoveSequence(board, network):
     
     moveSequences = getAllPossiblePositions(board)
 
-    bestHeuristic = float("-inf")
-    bestSequence = None
+    bestHeuristicVal = float("-inf")
+    bestPos = None
 
-    for sequence in moveSequences.keys():
+    for pos in moveSequences.keys():
         tempBoard = copy.deepcopy(board)
         tempBoard.shouldDraw = False
-        tempBoard.currentPiece.x, tempBoard.currentPiece.y, tempBoard.currentPiece.rotation = sequence[0], sequence[1], sequence[2]
+        tempBoard.currentPiece.x, tempBoard.currentPiece.y, tempBoard.currentPiece.rotation = pos[0], pos[1], pos[2]
         tempBoard.place()
         tempBoard.update(window)
 
-        fitness = heuristic(tempBoard)
-        if fitness > bestHeuristic:
-            bestSequence = moveSequences[sequence]
-            bestHeuristic = fitness
+        params = heuristics.getIndividualHeuristics(tempBoard)
+        heuristicVal = network.activate(params)[0]
 
-    return bestSequence
+        if heuristicVal > bestHeuristicVal:
+            bestHeuristicVal = heuristicVal
+            bestPos = pos
+
+    return moveSequences[bestPos], bestPos
 
 
+def eval_genomes(genomes, config):
 
-def simulateMoves(board, moves):
-    
-    for i, move in enumerate(moves):
+    nets = []
+    boards = []
+    ge = []
 
-        for event in pygame.event.get():
-            continue
+    for i, (genome_id, genome) in enumerate(genomes):
+        genome.fitness = 0
+        net = neat.nn.FeedForwardNetwork.create(genome, config)
+        nets.append(net)
+        
+        board = Board((i % WINDOW_COLS) * BOARD_WIDTH, (i % WINDOW_ROWS) * BOARD_HEIGHT, (True if i < WINDOW_COLS * WINDOW_ROWS else False))
+        boards.append(board)
+        ge.append(genome)
 
-        if move == 'Down':
-            board.moveDown()
-        elif move == 'Right':
-            board.moveSide(1)
-        elif move == 'Left':
-            board.moveSide(-1)
-        elif move == 'RotateCW':
-            board.rotateCW()
-        elif move == 'RotateACW':
-            board.rotateACW()
+    running = True
+    while running:
                 
-        board.update(window)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                pygame.quit()
+                quit()
+
+        all_done = True
+        for i, (board, net) in enumerate(zip(boards, nets)):
+            if board.gameOver:
+                continue
+            all_done = False
+            
+            bestPos = getBestMoveSequence(board, net)[1]
+
+            board.currentPiece.x, board.currentPiece.y, board.currentPiece.rotation = bestPos[0], bestPos[1], bestPos[2]
+            board.place()
+
+            ge[i].fitness = board.score
+            
+            board.update(window)
+
         pygame.display.update()
         clock.tick(FPS)
+
+        if all_done:
+            break
+
+
+def simulateMove(board, move):
+    
+    if move == 'Down':
+        board.moveDown()
+    elif move == 'Right':
+        board.moveSide(1)
+    elif move == 'Left':
+        board.moveSide(-1)
+    elif move == 'RotateCW':
+        board.rotateCW()
+    elif move == 'RotateACW':
+        board.rotateACW()
+
+
+def eval_genomes_visualize_moves(genomes, config):
+
+    nets = []
+    boards = []
+    ge = []
+    moveSequences = []
+    moveIndices = []
+
+    for i, (genome_id, genome) in enumerate(genomes):
+        genome.fitness = 0
+        net = neat.nn.FeedForwardNetwork.create(genome, config)
+        nets.append(net)
+        
+        board = Board((i % WINDOW_COLS) * BOARD_WIDTH, (i % WINDOW_ROWS) * BOARD_HEIGHT, (True if i < WINDOW_COLS * WINDOW_ROWS else False))
+        boards.append(board)
+        ge.append(genome)
+        
+        moveSequences.append([]) 
+        moveIndices.append(0) 
+
+    running = True
+    while running:
+                
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                pygame.quit()
+                quit()
+
+
+        all_done = True
+        for i, (board, net) in enumerate(zip(boards, nets)):
+            if board.gameOver:
+                continue
+            all_done = False
+
+            # if current move sequence is over generate new
+            if moveIndices[i] >= len(moveSequences[i]):
+
+                moveSequences[i] = getBestMoveSequence(board, net)[0]
+                moveIndices[i] = 0
+
+
+            #simulating one move at a time per board each frame
+            simulateMove(board, moveSequences[i][moveIndices[i]]) 
+            moveIndices[i] += 1           
+
+
+            ge[i].fitness = board.score
+            
+            board.update(window)
+
+        pygame.display.update()
+        clock.tick(FPS)
+
+        if all_done:
+            break
 
 
 def pureSearch():
@@ -148,54 +238,10 @@ def pureSearch():
 
         bestSequence = getBestMoveSequence(board)
 
-        simulateMoves(board, bestSequence)
+        #simulateMoves(board, bestSequence)
+        board.currentPiece.x, board.currentPiece.y, board.currentPiece.rotation = bestSequence[0], bestSequence[1], bestSequence[2]
+        board.place()
         running = not board.gameOver
-
-
-def game(genomes, config):
-
-    networks = []
-    boards = []
-    _genomes = []
-
-    boardIndex = 0
-    for genome_id, genome in genomes:
-        network = neat.nn.FeedForwardNetwork.create(genome, config)
-        networks.append(network)
-        _genomes.append(genome)
-
-        board = Board((boardIndex % WINDOW_COLS) * BOARD_WIDTH, (boardIndex % WINDOW_ROWS) * BOARD_HEIGHT, (True if boardIndex < WINDOW_COLS * WINDOW_ROWS else False))
-        boards.append(board)
-        boardIndex += 1
-
-    alive = POPULATION_SIZE
-    while alive > 0:
-
-        for event in pygame.event.get():
-            continue
-
-        alive = 0
-        for ind, board in enumerate(boards):
-            
-            inputs = []
-            # checking all possible moves and calculating inputs
-            
-
-            
-            outputs = networks[ind].activate(inputs)
-            
-            alive += int(board.update(window))
-
-            # updating the fitness
-            _genomes[ind].fitness = heuristic(board)
-
-            if board.gameOver:
-                boards.pop(ind)
-                _genomes.pop(ind)
-                networks.pop(ind)
-        
-        pygame.display.update()
-        clock.tick(FPS)
 
 
 if __name__ == "__main__":
@@ -208,14 +254,19 @@ if __name__ == "__main__":
         neat.DefaultSpeciesSet, neat.DefaultStagnation,
         config_file)
     
-    pureSearch()
+    #pureSearch()
 
-    # population = neat.Population(config)
+    population = neat.Population(config)
 
-    # # For stats
-    # population.add_reporter(neat.StdOutReporter(True))
-    # stats = neat.StatisticsReporter()
-    # population.add_reporter(stats)
+    # For stats
+    population.add_reporter(neat.StdOutReporter(True))
+    stats = neat.StatisticsReporter()
+    population.add_reporter(stats)
 
-    # population.run(game)
+    try:
+        winner = population.run(eval_genomes)
+        with open('saved_network', 'wb') as f:
+            pickle.dump(winner, f)
+    except KeyboardInterrupt:
+        pygame.quit()
 

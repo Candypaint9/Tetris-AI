@@ -77,7 +77,7 @@ def getIndividualHeuristics(board):
     return parameters
 
 
-def calcHeuristic(board, weights):
+def calcHeuristicManually(board, weights):
 
     _gaps = gaps(board)
 
