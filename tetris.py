@@ -46,10 +46,10 @@ class Piece:
         (226, 230, 5)  #T
     ]
 
-    def __init__(self, x, y):
+    def __init__(self, x, y, type):
         self.x = x
         self.y = y
-        self.pieceType = random.randint(1, len(self.pieces)-1)
+        self.pieceType = type
         self.color = self.colors[self.pieceType]
         self.rotation = 0
 
@@ -79,8 +79,13 @@ class Board:
         self.grid = []
         for i in range(ROWS): self.grid.append([0] * COLS)
 
-        self.currentPiece = Piece(self.xSpawn, self.ySpawn)
-        self.nextPiece = Piece(self.xSpawn, self.ySpawn)
+        self.bag = []
+        self.refillBag()
+        current_type = self.getNextPiece()
+        next_type = self.getNextPiece()
+
+        self.currentPiece = Piece(self.xSpawn, self.ySpawn, current_type)
+        self.nextPiece = Piece(self.xSpawn, self.ySpawn, next_type)
         self.heldPiece = None
         self.switched = False
 
@@ -111,14 +116,19 @@ class Board:
             self.draw(window)
 
         return True
+    
+    def refillBag(self):
+        self.bag = list(range(1, 8))  
+        random.shuffle(self.bag)
+    
+    def getNextPiece(self):
+        if not self.bag:
+            self.refillBag()
+        return self.bag.pop(0)
 
     def spawn(self):
         self.currentPiece = self.nextPiece
-        self.nextPiece = Piece(self.xSpawn, self.ySpawn)
-
-        # to reduce chance of same piece spawning again
-        if self.nextPiece == self.currentPiece:         
-            self.nextPiece = Piece(self.xSpawn, self.ySpawn)
+        self.nextPiece = Piece(self.xSpawn, self.ySpawn, self.getNextPiece())
         
         if self.collision():
             return False
@@ -266,27 +276,27 @@ class Board:
 
 
 # test
-# window = pygame.display.set_mode((BOARD_WIDTH, BOARD_HEIGHT))
-# window.fill(TILE_COLOR)
-# clock = pygame.time.Clock()
-# board = Board(0, 0)
+window = pygame.display.set_mode((BOARD_WIDTH, BOARD_HEIGHT))
+window.fill(TILE_COLOR)
+clock = pygame.time.Clock()
+board = Board(0, 0)
 
-# while True:
-#     for event in pygame.event.get():
+while True:
+    for event in pygame.event.get():
 
-#         if event.type == pygame.KEYDOWN:
-#             if event.key == pygame.K_SPACE:
-#                 board.moveDown()
-#             elif event.key == pygame.K_LEFT:
-#                 board.moveSide(-1)
-#             elif event.key == pygame.K_RIGHT:
-#                 board.moveSide(1)
-#             elif event.key == pygame.K_UP:
-#                 board.rotateCW()
-#             elif event.key == pygame.K_DOWN:
-#                 board.rotateACW()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                board.moveDown()
+            elif event.key == pygame.K_LEFT:
+                board.moveSide(-1)
+            elif event.key == pygame.K_RIGHT:
+                board.moveSide(1)
+            elif event.key == pygame.K_UP:
+                board.rotateCW()
+            elif event.key == pygame.K_DOWN:
+                board.rotateACW()
     
     
-#     board.update(window)
-#     pygame.display.update()
-#     clock.tick(FPS)
+    board.update(window)
+    pygame.display.update()
+    clock.tick(FPS)
