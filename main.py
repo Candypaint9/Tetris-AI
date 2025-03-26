@@ -126,7 +126,7 @@ def eval_genomes(genomes, config):
         ge.append(genome)
 
     running = True
-    while running:
+    while len(boards) and running:
                 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -134,14 +134,23 @@ def eval_genomes(genomes, config):
                 pygame.quit()
                 quit()
 
-        all_done = True
-        for i, (board, net) in enumerate(zip(boards, nets)):
+        # remove boards with gameOver
+        for i, board in enumerate(boards):
             if board.gameOver:
-                continue
-            all_done = False
+                nets.pop(i)
+                boards.pop(i)
+                ge.pop(i)
+
+        for i, (board, net) in enumerate(zip(boards, nets)):
+
+            if i < WINDOW_COLS * WINDOW_ROWS:
+                board.shouldDraw = True
+                board.x = (i % WINDOW_COLS) * BOARD_WIDTH
+                board.y = (i % WINDOW_ROWS) * BOARD_HEIGHT
+            else:
+                board.shouldDraw = False
             
             bestPos = getBestMoveSequence(board, net)[1]
-
             board.currentPiece.x, board.currentPiece.y, board.currentPiece.rotation = bestPos[0], bestPos[1], bestPos[2]
             board.place()
 
@@ -151,9 +160,6 @@ def eval_genomes(genomes, config):
 
         pygame.display.update()
         clock.tick(FPS)
-
-        if all_done:
-            break
 
 
 def simulateMove(board, move):

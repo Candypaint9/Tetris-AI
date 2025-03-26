@@ -276,27 +276,27 @@ class Board:
 
 
 # test
-window = pygame.display.set_mode((BOARD_WIDTH, BOARD_HEIGHT))
-window.fill(TILE_COLOR)
-clock = pygame.time.Clock()
-board = Board(0, 0)
+# window = pygame.display.set_mode((BOARD_WIDTH, BOARD_HEIGHT))
+# window.fill(TILE_COLOR)
+# clock = pygame.time.Clock()
+# board = Board(0, 0)
 
-while True:
-    for event in pygame.event.get():
+# while True:
+#     for event in pygame.event.get():
 
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                board.moveDown()
-            elif event.key == pygame.K_LEFT:
-                board.moveSide(-1)
-            elif event.key == pygame.K_RIGHT:
-                board.moveSide(1)
-            elif event.key == pygame.K_UP:
-                board.rotateCW()
-            elif event.key == pygame.K_DOWN:
-                board.rotateACW()
+#         if event.type == pygame.KEYDOWN:
+#             if event.key == pygame.K_SPACE:
+#                 board.moveDown()
+#             elif event.key == pygame.K_LEFT:
+#                 board.moveSide(-1)
+#             elif event.key == pygame.K_RIGHT:
+#                 board.moveSide(1)
+#             elif event.key == pygame.K_UP:
+#                 board.rotateCW()
+#             elif event.key == pygame.K_DOWN:
+#                 board.rotateACW()
     
     
-    board.update(window)
-    pygame.display.update()
-    clock.tick(FPS)
+#     board.update(window)
+#     pygame.display.update()
+#     clock.tick(FPS)
