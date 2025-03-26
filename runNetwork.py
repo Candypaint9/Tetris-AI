@@ -35,9 +35,11 @@ def game(network):
         simulateMove(board, moveSequence[moveIndex])
         moveIndex += 1
         
-        running = board.update(window)
+        board.update(window)
         pygame.display.update()
         clock.tick(FPS)
+
+    print("Final score reached: ", board.score)
 
 
 if __name__ == "__main__":
