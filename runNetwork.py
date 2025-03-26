@@ -2,11 +2,12 @@ import pygame
 import neat
 import pickle
 import os
-from tetris import Board, TILE_COLOR, BOARD_HEIGHT, BOARD_WIDTH, FPS
+from tetris import Board, TILE_COLOR, BOARD_HEIGHT, BOARD_WIDTH
 from train import simulateMove, getBestMoveSequence
 
 window = None
 clock = None
+FPS = 240
 
 # when true moves simulation isnt shown and pieces are instantly placed
 fastMode = True
