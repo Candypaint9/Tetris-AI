@@ -48,8 +48,7 @@ def game(network, fastMode = False):
     print("Final score reached: ", board.score)
 
 
-if __name__ == "__main__":
-
+def runGame():
     local_dir = os.path.dirname(__file__)
     config_file = os.path.join(local_dir, 'config.txt')
 
@@ -63,3 +62,7 @@ if __name__ == "__main__":
     network = neat.nn.FeedForwardNetwork.create(genome, config)
 
     game(network, True)
+
+
+if __name__ == "__main__":
+    runGame()
