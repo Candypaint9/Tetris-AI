@@ -3,7 +3,7 @@ import random
 
 pygame.init()
 
-BOX_SIZE = 10
+BOX_SIZE = 25
 ROWS = 21
 COLS = 10
 PADDING = BOX_SIZE
@@ -275,7 +275,7 @@ class Board:
         window.blit(scoreTile, (self.x + COLS * BOX_SIZE + 2 * PADDING, self.y + 8 * BOX_SIZE + 9*PADDING, FONT_SIZE, FONT_SIZE))
 
 
-# test
+#test
 # window = pygame.display.set_mode((BOARD_WIDTH, BOARD_HEIGHT))
 # window.fill(TILE_COLOR)
 # clock = pygame.time.Clock()

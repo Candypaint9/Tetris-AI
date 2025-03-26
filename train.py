@@ -14,10 +14,9 @@ WINDOW_COLS = 8    # To increase rows and columns and to still have everything f
 WINDOW_HEIGHT = BOARD_HEIGHT * WINDOW_ROWS
 WINDOW_WIDTH = BOARD_WIDTH * WINDOW_COLS
 
+window = None
+clock = None
 
-window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-window.fill(TILE_COLOR)
-clock = pygame.time.Clock()
 
 """"
 inputs
@@ -248,9 +247,7 @@ def pureSearch():
         board.place()
         running = not board.gameOver
 
-
-if __name__ == "__main__":
-    
+def trainNetwork():
     local_dir = os.path.dirname(__file__)
     config_file = os.path.join(local_dir, 'config.txt')
 
@@ -270,8 +267,17 @@ if __name__ == "__main__":
 
     try:
         winner = population.run(eval_genomes)
-        with open('saved_network', 'wb') as f:
+        with open('saved_network.pickle', 'wb') as f:
             pickle.dump(winner, f)
     except KeyboardInterrupt:
         pygame.quit()
 
+
+
+if __name__ == "__main__":
+
+    window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+    window.fill(TILE_COLOR)
+    clock = pygame.time.Clock()
+
+    trainNetwork()
