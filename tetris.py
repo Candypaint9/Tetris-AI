@@ -3,7 +3,7 @@ import random
 
 pygame.init()
 
-BOX_SIZE = 25
+BOX_SIZE = 30
 ROWS = 21
 COLS = 10
 PADDING = BOX_SIZE
@@ -11,8 +11,6 @@ STATS_WIDTH = PADDING + 4 * BOX_SIZE
 BOARD_HEIGHT = BOX_SIZE * ROWS + 2 * PADDING
 BOARD_WIDTH = BOX_SIZE * COLS + STATS_WIDTH + 2 * PADDING
 GRID_THICKNESS = 1
-
-FPS = 60
 
 # The window with TILE_COLOR is supposed to contain many boards each with color BOARD_BG_COLOR(helpful during training process to visualize multiple boards at once)
 TILE_COLOR = (10, 14, 18)
@@ -89,7 +87,7 @@ class Board:
         self.heldPiece = None
         self.switched = False
 
-        self.prevClearedLines = 0
+        self.prevClearedLines = [0]
         self.gameOver = False
         self.shouldDraw = draw
 
@@ -109,7 +107,10 @@ class Board:
                 self.gameOver = True
                 return False
             
-        self.prevClearedLines = self.clearLines()
+        # for the heuristic (storing cleared lines for currntPiece and nextPiece)
+        self.prevClearedLines.append(self.clearLines())
+        if len(self.prevClearedLines) > 2:
+            self.prevClearedLines.pop(0)
 
         if self.shouldDraw:
             self.fillBoard(window)

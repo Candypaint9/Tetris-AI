@@ -61,17 +61,22 @@ def bumpiness(board):
 
     return bumpiness
 
-def clearedLines(board):
+def clearedLines(board, isCheckingNextPiece):
 
-    return board.prevClearedLines
+    cleared = board.prevClearedLines[1]
+
+    if isCheckingNextPiece:
+        cleared += board.prevClearedLines[0]
+
+    return cleared
 
 
-def getIndividualHeuristics(board):
+def getIndividualHeuristics(board, isCheckingNextPiece):
     
     _gaps = gaps(board)
 
     parameters = [
-        score(board), _gaps[0], _gaps[1], maxHeight(board), bumpiness(board), clearedLines(board)
+        score(board), _gaps[0], _gaps[1], maxHeight(board), bumpiness(board), clearedLines(board, isCheckingNextPiece)
     ]
 
     return parameters

@@ -1,4 +1,2 @@
-    # while not board.collision():
-    #     board.currentPiece.y += 1
-    # board.currentPiece.y -= 1
-    # board.place()
+if __name__ == "__main__":
+    runGame()

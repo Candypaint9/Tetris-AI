@@ -3,20 +3,28 @@ import neat
 import pickle
 import os
 from tetris import Board, TILE_COLOR, BOARD_HEIGHT, BOARD_WIDTH
-from train import simulateMove, getBestMoveSequence
+from train import getBestMoveSequence
 
-window = None
-clock = None
 FPS = 240
 
 # when true moves simulation isnt shown and pieces are instantly placed
 fastMode = True
 
-def game(network, fastMode = False):
+def simulateMove(board, move):
+    
+    if move == 'Down':
+        board.moveDown()
+    elif move == 'Right':
+        board.moveSide(1)
+    elif move == 'Left':
+        board.moveSide(-1)
+    elif move == 'RotateCW':
+        board.rotateCW()
+    elif move == 'RotateACW':
+        board.rotateACW()
 
-    window = pygame.display.set_mode((BOARD_WIDTH, BOARD_HEIGHT))
-    window.fill(TILE_COLOR)
-    clock = pygame.time.Clock()
+
+def game(network, fastMode = False):
 
     board = Board(0, 0)
     moveSequence = []
@@ -52,6 +60,13 @@ def game(network, fastMode = False):
 
 
 def runGame():
+
+    global window, clock
+
+    window = pygame.display.set_mode((BOARD_WIDTH, BOARD_HEIGHT))
+    window.fill(TILE_COLOR)
+    clock = pygame.time.Clock()
+
     local_dir = os.path.dirname(__file__)
     config_file = os.path.join(local_dir, 'config.txt')
 
