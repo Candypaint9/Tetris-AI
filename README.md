@@ -1,9 +1,7 @@
 # Tetris AI
 ## Overview
 This project implements a simulated tetris environment, with an AI agent that plays Tetris by taking real-time decisions using the NEAT (NeuroEvolution of Augmenting Topologies) algorithm. The goal is to evolve neural networks that can effectively learn and improve their gameplay over generations.
-<!--<a href="https://www.youtube.com/watch?v=aJa3U-hydXc">
-  <img src="https://i.ytimg.com/an_webp/1cSzxlhxOw8/mqdefault_6s.webp?du=3000&sqp=CP3fpb8G&rs=AOn4CLDw6cl4t4B0oTQI9PqfdBqD9a3vHQ" alt="Demo Video">
-</a>-->
+[![Demo Video](https://github.com/Candypaint9/Tetris-AI/blob/main/Screenshot%202025-03-31%20175629.png)](https://github.com/Candypaint9/Tetris-AI/blob/main/video-demo.mp4)
 
 ## Features
 
