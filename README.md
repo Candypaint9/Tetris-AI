@@ -25,7 +25,6 @@ This project implements a simulated tetris environment, with an AI agent that pl
 - <b>Python 3.7+</b></li>
 - <b>Python Libraries:</b>
   <ul>
-    <li>numpy</li>
     <li>pygame</li>
     <li>neat-python</li>
   </ul>
