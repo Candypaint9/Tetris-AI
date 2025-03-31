@@ -8,7 +8,7 @@ This project implements a simulated tetris environment, with an AI agent that pl
 - <b>Tetris Environment:</b>  A simulated Tetris game where the AI agent makes decisions.
 - <b>NEAT Implementation:</b>  Uses the NEAT algorithm to evolve neural network controllers.
 - <b>Real-Time Decision Making: </b>The evolved agent makes gameplay decisions based on the current Tetris board state.
-- <b>Fitness Evaluation: </b>The fitness score is evaluated on the basis of gameplay perfomance based on the following features 
+- <b>Fitness Evaluation: </b>The fitness score is evaluated on the basis of gameplay perfomance based on the following features:
     <ul>
       <li>game score</li>
       <li>maximum height of columns</li>
