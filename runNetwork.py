@@ -5,10 +5,10 @@ import os
 from tetris import Board, TILE_COLOR, BOARD_HEIGHT, BOARD_WIDTH
 from train import getBestMoveSequence
 
-FPS = 240
+FPS = 60
 
 # when true moves simulation isnt shown and pieces are instantly placed
-fastMode = True
+fastMode = False
 
 def simulateMove(board, move):
     
