@@ -1,6 +1,6 @@
 # Tetris AI
 ## Overview
-This project implements a simulated tetris environment, with an AI agent that plays Tetris by taking real-time decisions using the NEAT (NeuroEvolution of Augmenting Topologies) algorithm. The goal is to evolve neural networks that can effectively learn and improve their gameplay over generations. 
+This project implements a simulated tetris environment, with an AI agent that plays Tetris by taking real-time decisions using the NEAT (NeuroEvolution of Augmenting Topologies) algorithm. The goal is to evolve neural networks that can effectively learn and improve their gameplay over generations.
 <br>
 <br>
     ![Demo](./demo.gif)
